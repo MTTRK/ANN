@@ -10,9 +10,9 @@ import numpy as np
 """
 
 in_dim = 26
-hidden_layer_dim = 13
+hidden_layer_dim = 5
 out_dim = 1
-
+epochs = 300
 random_seed = 561
 
 X = np.identity(in_dim)
@@ -38,11 +38,11 @@ model.add(
 
 model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-model.fit(X, Y, nb_epoch=150, batch_size=in_dim)
+model.fit(X, Y, nb_epoch=epochs, batch_size=in_dim)
 
 scores = model.evaluate(X, Y)
 print("%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
 
 predictions = model.predict(X)
-rounded = [x.round() for x in predictions]
+rounded = [x.round()[0] for x in predictions]
 print(rounded)
