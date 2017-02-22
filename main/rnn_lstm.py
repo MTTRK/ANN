@@ -12,9 +12,9 @@ from keras.layers import LSTM
 
 random_seed = 561
 alphabet = 26
-cell_num = 104
-epochs = 100
-batch_size = 13
+cell_num = 16
+epochs = 1000
+batch_size = 26
 
 np.random.seed(random_seed)
 dataX = np.identity(alphabet)
