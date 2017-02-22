@@ -12,7 +12,7 @@ import numpy as np
 in_dim = 26
 hidden_layer_dim = 5
 out_dim = 1
-epochs = 300
+epochs = 500
 random_seed = 561
 
 X = np.identity(in_dim)
