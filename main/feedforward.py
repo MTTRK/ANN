@@ -1,20 +1,20 @@
-from keras.models import Sequential
-from keras.layers.core import Dense
-import numpy as np
-
 """
 [1, 0, ..., 0] = 'a'    --> 1 (because its a vowel)
 [0, 1, ..., 0] = 'b'    --> 0 (because its a consonant)
 ...
 [0, 0, ..., 1] = 'z'    --> 0
 """
+from keras.models import Sequential
+from keras.layers.core import Dense
+import numpy as np
+
 
 in_dim = 26
-hidden_layer_dim = 5
-out_dim = 1
+out_layer = 1
 epochs = 500
 random_seed = 561
 
+np.random.seed(random_seed)
 X = np.identity(in_dim)
 Y = np.asarray([1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0])
 
@@ -22,17 +22,7 @@ model = Sequential()
 model.add(
     Dense(
         input_dim=in_dim,
-        output_dim=in_dim,
-        init='uniform',
-        activation='relu'))
-model.add(
-    Dense(
-        output_dim=hidden_layer_dim,
-        init='uniform',
-        activation='relu'))
-model.add(
-    Dense(
-        output_dim=out_dim,
+        output_dim=out_layer,
         init='uniform',
         activation='sigmoid'))
 
