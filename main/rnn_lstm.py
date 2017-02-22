@@ -12,7 +12,7 @@ from keras.layers import LSTM
 
 random_seed = 561
 alphabet = 26
-cell_num = 16
+cell_num = 13
 epochs = 1000
 batch_size = 26
 
