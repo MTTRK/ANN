@@ -61,3 +61,8 @@ g       E
 </s>    STOP
 ...
 ```
+
+### morphsegm.py
+Builds and trains a neural network using the input data in the format
+provided by *prep_data.py*. Single words will be classified alone, the START-STOP tokens
+mark the beginning and ending of these.
