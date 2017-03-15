@@ -111,10 +111,10 @@ def main():
 
     model = createNetwork(
             seed=561,
-            layers=[
-                Dense(input_dim=indim, output_dim=indim, init=init, activation=activation),
-                Dense(output_dim=indim, init=init, activation=activation),
-                Dense(output_dim=outdim, init=init, activation=activation)])
+            layers=
+                [Dense(input_dim=indim, output_dim=indim, init=init, activation=activation)] +
+                [Dense(output_dim=indim, init=init, activation=activation) for i in range(0, HIDDEN_LAYER)] +
+                [Dense(output_dim=outdim, init=init, activation=activation)])
 
     train_model(model, input_matrix, output_matrix, epochs, batches, loss, optimizer)
     scores = model.evaluate(input_matrix, output_matrix)
@@ -127,8 +127,9 @@ def main():
 """
  HYPER PARAMETERS
 """
-WINDOW_SIZE = 5
+WINDOW_SIZE = 7
 WINDOW_TYPE = mio.use_left_window
+HIDDEN_LAYER = 2
 EPOCHS = 2000
 
 if __name__ == "__main__":
