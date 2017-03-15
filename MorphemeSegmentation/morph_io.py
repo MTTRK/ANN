@@ -38,6 +38,27 @@ def print_mapping(title, mapping):
         print(str(key) + (8 - len(key)) * ' ' + '--> ' + str(mapping[key]))
 
 
+def prepare_symbols_for_windowing(symbols, n, pad, drop):
+    """
+    :param symbols: ['<s>', 'a', ...]
+    :param n: int
+    :param pad: '</s>'
+    :param drop: '<s>'
+    """
+
+    w_input_symbols = []
+
+    for s in symbols:
+        # we will need n-1 'pad' symbols (for the window)
+        if s == pad:
+            for i in range(0, n - 1):
+                w_input_symbols.append(s)
+        else:
+            w_input_symbols.append(s)
+    # we can remove the 'drop' symbols (won't be using them)
+    return [x for x in w_input_symbols if x != drop]
+
+
 def use_left_window(n, input_symbols):
     """
     :param n: int
@@ -45,17 +66,7 @@ def use_left_window(n, input_symbols):
     """
 
     print('\nUsing left window')
-    w_input_symbols = []
-
-    for s in input_symbols:
-        # we will need n-1 START_SIGN every time for the window
-        if s == START_SIGN:
-            for i in range(0, n - 1):
-                w_input_symbols.append(s)
-        else:
-            w_input_symbols.append(s)
-    # we can drop the STOP_SIGN signs (won't be using them)
-    w_input_symbols = [x for x in w_input_symbols if x != STOP_SIGN]
+    w_input_symbols = prepare_symbols_for_windowing(input_symbols, n, START_SIGN, STOP_SIGN)
 
     w_sized_blocks = []
     # creating the window sized 'blocks'
@@ -76,18 +87,7 @@ def use_right_window(n, input_symbols):
     """
 
     print('\nUsing right window')
-    w_input_symbols = []
-
-    for s in input_symbols:
-        # we will need n-1 STOP_SIGN every time for the window
-        if s == STOP_SIGN:
-            for i in range(0, n - 1):
-                w_input_symbols.append(s)
-        else:
-            w_input_symbols.append(s)
-
-    # we can drop the START_SIGN signs (won't be using them)
-    w_input_symbols = [x for x in w_input_symbols if x != START_SIGN]
+    w_input_symbols = prepare_symbols_for_windowing(input_symbols, n, STOP_SIGN, START_SIGN)
 
     w_sized_blocks = []
     # creating the window sized 'blocks'
