@@ -1,21 +1,19 @@
-'''
+"""
 Expected format:
 ...
 annotations<TAB>an not at ion s, ...
 ...
-'''
+"""
 import sys
-
-
-START_SIGN='<s>'
-START='START'
-BEGIN='B'
-MIDDLE='M'
-END='E'
-SINGLE='S'
-STOP='STOP'
-STOP_SIGN='</s>'
-SEPARATOR='\t'
+from .morph_io import STOP_SIGN
+from .morph_io import START_SIGN
+from .morph_io import START
+from .morph_io import SINGLE
+from .morph_io import BEGIN
+from .morph_io import END
+from .morph_io import MIDDLE
+from .morph_io import STOP
+from .morph_io import SEPARATOR
 
 
 def output_segments(segmentation: str):
@@ -40,8 +38,8 @@ def process_line(line: str):
         output_segments(segmentation)
 
 
-def read_file(filepath):
-    with open(filepath, 'r') as file:
+def read_file(file_path: str):
+    with open(file_path, 'r') as file:
         for line in file:
             yield line
 
