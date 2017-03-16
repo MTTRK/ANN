@@ -122,6 +122,8 @@ def main():
 
     # test it with a word (from the training-set)
     print(predict(model, 'abounded', output_mapping))
+    # model.save('morphsegm_model.h5')
+    # model = load_model('morphsegm_model.h5')
 
 
 """
@@ -130,7 +132,7 @@ def main():
 WINDOW_SIZE = 7
 WINDOW_TYPE = mio.use_left_window
 HIDDEN_LAYER = 2
-EPOCHS = 2000
+EPOCHS = 1500
 
 if __name__ == "__main__":
     main()
