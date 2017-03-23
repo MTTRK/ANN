@@ -140,7 +140,7 @@ def output_predictions(fileinput: str, model, output_mapping):
 
 
 def main():
-    if(len(sys.argv[1:]) != 2):
+    if len(sys.argv[1:]) != 2:
         raise Exception('Script needs 2 input-parameters (training samples, words to be predicted)')
 
     trainingpath = sys.argv[1:][0]
@@ -159,8 +159,8 @@ HIDDEN_LAYER = 1
 EPOCHS = 200
 ACTIVATION = 'relu'
 OPTIMIZER = 'adam'
-mio.END = 'M'
-mio.SINGLE = 'B'
+#mio.END = 'M'
+#mio.SINGLE = 'B'
 
 
 if __name__ == "__main__":
