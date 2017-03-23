@@ -117,12 +117,9 @@ mt:en MT$
 
 ### evaluate.py
 Now that we have some results and can produce new ones, we need a way be able to assess the quality
-of the predictions. 
-* F-Score will come to our help:
-![equation](http://latex.codecogs.com/gif.latex?F%20%3D%202%20%5Ctimes%20%5Cfrac%20%7Bprecision*recall%7D%7Bprecision&plus;recall%7D)
-* Recall:
-![equation](http://latex.codecogs.com/gif.latex?Recall%20%3D%20%5Cfrac%20%7BTP%7D%7BTP&plus;FN%7D)
-* Precision:
-![equation](http://latex.codecogs.com/gif.latex?Precision%20%3D%20%5Cfrac%20%7BTP%7D%7BTP&plus;FP%7D)
+of the predictions. F-Score will come to our help:
+* ![equation](http://latex.codecogs.com/gif.latex?F%20%3D%202%20%5Ctimes%20%5Cfrac%20%7Bprecision*recall%7D%7Bprecision&plus;recall%7D)
+* ![equation](http://latex.codecogs.com/gif.latex?Recall%20%3D%20%5Cfrac%20%7BTP%7D%7BTP&plus;FN%7D)
+* ![equation](http://latex.codecogs.com/gif.latex?Precision%20%3D%20%5Cfrac%20%7BTP%7D%7BTP&plus;FP%7D)
 
 TN = True Negative, TP = True Positive, FN = False Negative (should have found these), FP = False Positive (shouldn't have found these)
