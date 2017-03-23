@@ -1,5 +1,5 @@
 """
-Expected format:
+Expected format for training:
 ...
 <s>     START
 a       B
@@ -15,6 +15,13 @@ n       E
 s       S
 </s>    STOP
 ...
+
+Expected format for predictions:
+...
+ablatives
+abounded
+abrogate
+...
 """
 import sys
 from keras.models import Sequential
@@ -23,25 +30,10 @@ import numpy as np
 import morph_io as mio
 
 
-def read_file(filepath):
-    """
-     filepath: str
-    """
-
-    with open(filepath, 'r') as file:
-        for line in file:
-            yield line
-
-
-def read_stdin():
-    for line in sys.stdin:
-        yield line
-
-
 def createNetwork(seed, layers):
     """
-     seed: int
-     layers: [Dense(...), ...]
+    :param seed: int
+    :param layers: [Dense(...), ...]
     """
 
     np.random.seed(seed)
@@ -53,24 +45,25 @@ def createNetwork(seed, layers):
 
 def train_model(model, X, Y, epochs, batches, lossf, opt):
     """
-     model: NN-Model (ex.: Sequential)
-     X: input list of arrays
-     Y: output list of arrays
-     epochs: number of rounds
-     batches: number of samples per gradient update
-     lossf: loss function to be used
-     opt: optimizer to be used
+     :param model: NN-Model (ex.: Sequential)
+     :param X: input list of arrays
+     :param Y: output list of arrays
+     :param epochs: number of rounds
+     :param batches: number of samples per gradient update
+     :param lossf: loss function to be used
+     :param opt: optimizer to be used
     """
 
     model.compile(loss=lossf, optimizer=opt, metrics=['accuracy'])
     model.fit(X, Y, nb_epoch=epochs, batch_size=batches)
 
 
-def predict(model, X, output_mapping):
+def predict_word(model, X, output_mapping):
     """
     :param model: NeuralNetwork (Keras) model
     :param X: str (ex.: 'abounded')
     :param output_mapping: {'B': [1 0 ...], 'E'...}
+    :return ['B', 'E', 'B', ...]
     """
 
     symbols = [s for s in X]
@@ -78,20 +71,21 @@ def predict(model, X, output_mapping):
     symbols.append(mio.STOP_SIGN)
 
     symbol_matrix = mio.transform_input(symbols, WINDOW_TYPE, WINDOW_SIZE)
-
     prediction_matrix = model.predict(symbol_matrix)
 
     return mio.predictions_to_symbols(prediction_matrix, output_mapping)
 
 
-def main():
+def build_and_train(param: str):
+    """
+    :param param: file-path
+    :return model: NeuralNetwork (already trained)
+    :return output_mapping: {'B': [1 0 ...], ...}
+    """
+
     input = []
-    if len(sys.argv[1:]) == 1:
-        for line in read_file(sys.argv[1:][0]):
-            input.append(line.strip('\n').split('\t'))
-    else:
-        for line in read_stdin():
-            input.append(line)
+    for line in mio.read_file(param):
+        input.append(line.strip('\n').split('\t'))
 
     # process_input will apply a windowing function to the input just before
     # transforming it (list of symbols) into appropriately sized
@@ -102,37 +96,72 @@ def main():
     # create and train NN
     indim = len(input_matrix[0])
     outdim = len(output_matrix[0])
-    init = 'uniform'
-    activation = 'sigmoid'
-    loss = 'binary_crossentropy'
-    optimizer = 'adam'
-    batches =len(input_matrix)
+    activation = ACTIVATION
+    optimizer = OPTIMIZER
     epochs = EPOCHS
+    batches = len(input_matrix)
+    loss = 'binary_crossentropy'
+    init = 'uniform'
 
     model = createNetwork(
-            seed=561,
-            layers=
-                [Dense(input_dim=indim, output_dim=indim, init=init, activation=activation)] +
-                [Dense(output_dim=indim, init=init, activation=activation) for i in range(0, HIDDEN_LAYER)] +
-                [Dense(output_dim=outdim, init=init, activation=activation)])
+        seed=561,
+        layers=
+            [Dense(input_dim=indim, output_dim=indim, init=init, activation=activation)] +
+            [Dense(output_dim=indim, init=init, activation=activation) for i in range(0, HIDDEN_LAYER)] +
+            [Dense(output_dim=outdim, init=init, activation=activation)])
 
     train_model(model, input_matrix, output_matrix, epochs, batches, loss, optimizer)
     scores = model.evaluate(input_matrix, output_matrix)
     print("%s: %.2f%%" % (model.metrics_names[1], scores[1] * 100))
 
-    # test it with a word (from the training-set)
-    print(predict(model, 'abounded', output_mapping))
-    # model.save('morphsegm_model.h5')
-    # model = load_model('morphsegm_model.h5')
+    return model, output_mapping
+
+
+def output_predictions(fileinput: str, model, output_mapping):
+    """
+    :param fileinput: path to inputfile
+    :param model: NeuralNetwork
+    :param output_mapping: {'B': [1 0 ...], 'E'...}
+    """
+
+    # do predictions for all the words
+    predictions = []
+    for word in mio.read_file(fileinput):
+        current = predict_word(model, word.strip(' \n'), output_mapping)
+        current.insert(0, mio.START)
+        current.append(mio.STOP)
+        predictions.append(current)
+
+    # write out the results
+    with open(fileinput + '.PREDICTIONS', 'w') as ofile:
+        for prediction in predictions:
+            for symbol in prediction:
+                ofile.write(symbol + '\n')
+
+
+def main():
+    if(len(sys.argv[1:]) != 2):
+        raise Exception('Script needs 2 input-parameters (training samples, words to be predicted)')
+
+    trainingpath = sys.argv[1:][0]
+    wordspath = sys.argv[1:][1]
+
+    model, output_mapping = build_and_train(trainingpath)
+    output_predictions(wordspath, model, output_mapping)
 
 
 """
  HYPER PARAMETERS
 """
-WINDOW_SIZE = 7
+WINDOW_SIZE = 3
 WINDOW_TYPE = mio.use_left_window
-HIDDEN_LAYER = 2
-EPOCHS = 1500
+HIDDEN_LAYER = 1
+EPOCHS = 200
+ACTIVATION = 'relu'
+OPTIMIZER = 'adam'
+mio.END = 'M'
+mio.SINGLE = 'B'
+
 
 if __name__ == "__main__":
     main()

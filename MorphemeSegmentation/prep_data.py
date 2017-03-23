@@ -5,56 +5,47 @@ annotations<TAB>an not at ion s, ...
 ...
 """
 import sys
-from .morph_io import STOP_SIGN
-from .morph_io import START_SIGN
-from .morph_io import START
-from .morph_io import SINGLE
-from .morph_io import BEGIN
-from .morph_io import END
-from .morph_io import MIDDLE
-from .morph_io import STOP
-from .morph_io import SEPARATOR
+import morph_io as mio
 
 
 def output_segments(segmentation: str):
+    """
+    :param segmentation: ex.: "abound ed"
+    """
+
     # Start of word
-    print(START_SIGN + SEPARATOR + START)
+    print(mio.START_SIGN + mio.SEPARATOR + mio.START)
+
     # Actual word
     for segment in segmentation.split(' '):
         if len(segment) == 1:
-            print(segment + SEPARATOR + SINGLE)
+            print(segment + mio.SEPARATOR + mio.SINGLE)
         else:
-            print(segment[0] + SEPARATOR + BEGIN)
+            print(segment[0] + mio.SEPARATOR + mio.BEGIN)
             for index in range(1, len(segment) - 1):
-                print(segment[index] + SEPARATOR + MIDDLE)
-            print(segment[len(segment)-1] + SEPARATOR + END)
+                print(segment[index] + mio.SEPARATOR + mio.MIDDLE)
+            print(segment[len(segment)-1] + mio.SEPARATOR + mio.END)
+
     # End of word
-    print(STOP_SIGN + SEPARATOR + STOP)
+    print(mio.STOP_SIGN + mio.SEPARATOR + mio.STOP)
 
 
 def process_line(line: str):
+    """
+    :param line: ex.: "bowler<TAB>bowl er, bowler"
+    """
+
     segmentation_set = {x.strip(' \n') for x in line.split('\t')[1].split(',')}
     for segmentation in segmentation_set:
         output_segments(segmentation)
 
 
-def read_file(file_path: str):
-    with open(file_path, 'r') as file:
-        for line in file:
-            yield line
-
-
-def read_stdin():
-    for line in sys.stdin:
-        yield line
-
-
 def main():
     if len(sys.argv[1:]) == 1:
-        for line in read_file(sys.argv[1:][0]):
+        for line in mio.read_file(sys.argv[1:][0]):
             process_line(line)
     else:
-        for line in read_stdin():
+        for line in mio.read_stdin():
             process_line(line)
 
 

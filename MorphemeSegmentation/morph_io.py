@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import string
 
@@ -12,7 +13,22 @@ MIDDLE = 'M'
 END = 'E'
 SINGLE = 'S'
 ALPHABET = [START_SIGN, STOP_SIGN, "'", '-'] + list(string.ascii_lowercase)
-OUTPUT_ALPHABET = [BEGIN, MIDDLE, SINGLE, END]
+OUTPUT_ALPHABET = list({BEGIN, MIDDLE, SINGLE, END})
+
+
+def read_file(file_path: str):
+    """
+    :param file_path: input file path
+    """
+
+    with open(file_path, 'r') as file:
+        for line in file:
+            yield line
+
+
+def read_stdin():
+    for line in sys.stdin:
+        yield line
 
 
 def get_input_map():
@@ -65,9 +81,7 @@ def use_left_window(n, input_symbols):
     :param input_symbols: ['<s>', 'a', 'b', ...]
     """
 
-    print('\nUsing left window')
     w_input_symbols = prepare_symbols_for_windowing(input_symbols, n, START_SIGN, STOP_SIGN)
-
     w_sized_blocks = []
     # creating the window sized 'blocks'
     for i in range(0, len(w_input_symbols) - n + 1):
@@ -86,9 +100,7 @@ def use_right_window(n, input_symbols):
     :param input_symbols: ['<s>', 'a', 'b', ...]
     """
 
-    print('\nUsing right window')
     w_input_symbols = prepare_symbols_for_windowing(input_symbols, n, STOP_SIGN, START_SIGN)
-
     w_sized_blocks = []
     # creating the window sized 'blocks'
     for i in range(0, len(w_input_symbols) - n + 1):
@@ -107,7 +119,6 @@ def use_center_window(n, input_symbols):
     :param input_symbols: ['<s>', 'a', 'b', ...]
     """
 
-    print('\nUsing center window')
     hw_size = int(n / 2)
     w_size = hw_size * 2 + 1
     w_input_symbols = []
@@ -149,14 +160,8 @@ def predictions_to_symbols(prediction_matrix, output_map):
 
     symbols = []
     for block in prediction_matrix:
-        rounded_block = [x.round() for x in block]
-        if max(rounded_block) == 1.0:
-            index = rounded_block.index(1.0)
-            filtered_symbol = [key for (key, value) in output_map.items() if value.tolist().index(1.0) == index]
-        else:
-            # if all zeros --> just take any of the outputs
-            filtered_symbol = list(output_map.keys())[0]
-
+        max_index = block.tolist().index(max(block))
+        filtered_symbol = [key for (key, value) in output_map.items() if value.tolist().index(1.0) == max_index]
         symbols.append(filtered_symbol[0])
 
     return symbols
@@ -172,7 +177,6 @@ def transform_input(input_symbols, window_type, window_size):
     # applying the windowing
     # the function returns a list of lists (the nested lists are window-sized)
     w_input_symbols = window_type(window_size, input_symbols)
-    print('\nAfter windowing: ' + str(w_input_symbols[:5]) + '...')
 
     # one-hot vectors for the input
     input_map = get_input_map()
@@ -191,7 +195,7 @@ def process_training_input(input, window_type, window_size):
     input_symbols = [x[0] for x in input]
     inputs = transform_input(input_symbols, window_type, window_size)
 
-    # we don't need the output for the START/STOP signs (those are not going to be classified)
+    # we don't need the START/STOP signs (they are not going to be classified anyway)
     output_symbols = list(x[1] for x in input if x[1] not in [START, STOP])
 
     # one-hot vectors for the output
