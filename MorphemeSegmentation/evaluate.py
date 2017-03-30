@@ -1,9 +1,27 @@
+"""
+Expected format for the 2 files being evaluated:
+...
+START
+B
+E
+B
+M
+E
+B
+E
+B
+M
+E
+S
+...
+STOP
+"""
 import sys
 import morph_io as mio
 
 
-POS = mio.BEGIN
-NEG = mio.MIDDLE
+POS = [mio.BEGIN, mio.SINGLE]
+NEG = [mio.MIDDLE, mio.END]
 
 
 class Metric:
@@ -85,11 +103,11 @@ def generate_metrics(expectations: list, predictions: list):
             current_exp = expectations[word_index][sym_index]
             current_pred = predictions[word_index][sym_index]
 
-            if current_exp == POS and current_pred == POS:
+            if current_exp in POS and current_pred in POS:
                 tp += 1
-            elif current_exp == POS and current_pred == NEG:
+            elif current_exp in POS and current_pred in NEG:
                 fn += 1
-            elif current_exp == NEG and current_pred == POS:
+            elif current_exp in NEG and current_pred in POS:
                 fp += 1
             else:
                 tn += 1
@@ -110,16 +128,37 @@ def main():
     metrics = generate_metrics(expectations, predictions)
 
     aggregated_metric = Metric()
+    average_fscore = 0.0
+    average_precision = 0.0
+    average_recall = 0.0
+
     for metric in metrics:
+        average_fscore += metric.get_fscore()
+        average_precision += metric.get_precision()
+        average_recall += metric.get_recall()
+
         aggregated_metric.false_negative += metric.false_negative
         aggregated_metric.false_positive += metric.false_positive
         aggregated_metric.true_positive += metric.true_positive
         aggregated_metric.true_negative += metric.true_negative
 
-    print('Aggregated F-Score: ' + str(aggregated_metric.get_fscore()))
-    print('Per word F-Scores:')
+    average_fscore /= len(metrics)
+    average_precision /= len(metrics)
+    average_recall /= len(metrics)
+    print('Average F-Score=' + str(average_fscore) +
+            ' Precision=' + str(average_precision) +
+            ' Recall=' + str(average_recall))
+
+    print('Aggregated F-Score=' + str(aggregated_metric.get_fscore()) +
+            ' Precision=' + str(aggregated_metric.get_precision()) +
+            ' Recall=' + str(aggregated_metric.get_recall()))
+
+    print('\nPer word:')
     for metric in metrics:
-        print(str(metric.index) + 'th word --> ' + str(metric.get_fscore()))
+        print(str(metric.index) + 'th word -->' +
+              ' F-Score=' + str(metric.get_fscore()) +
+              ' Precision=' + str(metric.get_precision()) +
+              ' Recall=' + str(metric.get_recall()))
 
 
 if __name__ == "__main__":

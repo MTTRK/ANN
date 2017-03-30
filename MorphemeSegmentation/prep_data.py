@@ -49,5 +49,9 @@ def main():
             process_line(line)
 
 
+#mio.END = 'M'
+#mio.SINGLE = 'B'
+
+
 if __name__ == "__main__":
     main()
