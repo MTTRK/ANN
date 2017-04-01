@@ -149,3 +149,35 @@ The benchmarking we conducted involved the **{B, M, E, S}** classes (classes for
 **test_input/en/bmes/goldstd_trainset.segmentation** and the **test_input/en/goldstd_develset.words**.
 
 Although the numbers look good sometimes (F-Score=0.99...), this still is sadly a poor performance. The endings barely get recognized. The evaluation considers ['B', 'S'] TRUE and ['E', 'M'] FALSE.
+
+
+## Inference
+After a Train & Prediction run:
+```
+mt:en MT$ ll
+total 360
+-rw-r--r--  1 MT  staff  30740 Apr  1 16:25 benchmark.txt
+drwxr-xr-x  4 MT  staff    136 Mar 31 22:11 bm
+drwxr-xr-x  4 MT  staff    136 Mar 31 22:28 bmes
+-rw-r--r--  1 MT  staff  16003 Mar 29 01:00 goldstd_combined.words
+-rw-r--r--  1 MT  staff  36880 Mar 21 20:44 goldstd_combined.words_and_segments
+-rw-r--r--  1 MT  staff   6568 Mar 29 01:00 goldstd_develset.words
+-rw-r--r--  1 MT  staff  13580 Apr  1 16:29 goldstd_develset.words.PRED
+-rw-r--r--  1 MT  staff  15145 Mar 29 00:59 goldstd_develset.words_and_segments
+-rw-r--r--  1 MT  staff  14053 Mar 29 00:59 goldstd_develset.words_and_segments_without_duplicates
+-rw-r--r--  1 MT  staff   9434 Mar 29 01:00 goldstd_trainset.words
+-rw-r--r--  1 MT  staff  21734 Mar  8 23:44 goldstd_trainset.words_and_segments
+mt:en MT$ paste goldstd_develset.words_and_segments_without_duplicates goldstd_develset.words.PRED | cut -f1,2,4 > goldstd_develset_INFERENCE
+mt:en MT$ head goldstd_develset_INFERENCE 
+accompanied	ac compani ed	accompanied
+accompaniment	ac compani ment	accompaniment
+acknowledging	ac knowledg ing	acknowledging
+acquisition	acquis ition	acquisition
+acquisitions'	acquis ition s '	acquisition s '
+acupuncture	acupuncture	acupuncture
+acupuncture's	acupuncture 's	acupuncture 's
+adjudged	ad judg ed	ad judged
+advantageously	advant age ous ly	advantageously
+afire	a fire	afire
+```
+This file can be found here: **test_input/en/**
