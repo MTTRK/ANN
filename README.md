@@ -149,6 +149,7 @@ The benchmarking we conducted involved the **{B, M, E, S}** classes (classes for
 **test_input/en/bmes/goldstd_trainset.segmentation** and the **test_input/en/goldstd_develset.words**.
 
 Although the numbers look good sometimes (F-Score=0.99...), this still sadly is a poor performance. The endings barely get recognized. The evaluation considers ['B', 'S'] TRUE and ['E', 'M'] FALSE.
+The F-Score, Precision and Recall values are aggregated over the entire development wordset, i.e. they are not the average per word metrics.
 
 
 ## Inference
