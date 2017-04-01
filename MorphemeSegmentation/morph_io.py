@@ -203,3 +203,24 @@ def process_training_input(input, window_type, window_size):
     outputs = [output_map[x] for x in output_symbols]
 
     return np.asarray(inputs), get_input_map(), np.asarray(outputs), output_map
+
+
+def segment(word: str, segmentation: list):
+    """
+    Returns the segmentation of the given word
+    :param word: ex.: 'ablatives'
+    :param segmentation: ['B', 'M', ..., 'S']
+    :return: ablative s
+    """
+
+    if len(segmentation) != len(word):
+        raise 'Segmentation is longer than the word itself ??'
+
+    new = ''
+    for index in range(0, len(word)):
+        if segmentation[index] in [BEGIN, SINGLE]:
+            new += ' ' + word[index]
+        else:
+            new += word[index]
+
+    return new.strip()

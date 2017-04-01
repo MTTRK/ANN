@@ -29,6 +29,7 @@ from keras.callbacks import EarlyStopping
 from keras.layers.core import Dense
 import numpy as np
 import morph_io as mio
+import evaluate as eval
 
 
 class Prediction:
@@ -53,10 +54,9 @@ def predict_file(fileinput: str, model, output_mapping, window_type, window_size
 
     predictions = []
     for word in mio.read_file(fileinput):
-        current = predict_word(model, word.strip(' \n'), output_mapping, window_type, window_size)
-        current.insert(0, mio.START)
-        current.append(mio.STOP)
-        predictions.append(Prediction(word, current))
+        w = word.strip(' \n')
+        current = predict_word(model, w, output_mapping, window_type, window_size)
+        predictions.append(Prediction(w, current))
 
     return predictions
 
@@ -69,11 +69,13 @@ def output_predictions(fileoutput: str, predictions: list):
 
     with open(fileoutput, 'w') as ofile:
         for p in predictions:
+            ofile.write(mio.START + '\n')
             for symbol in p.prediction:
                 ofile.write(symbol + '\n')
+            ofile.write(mio.STOP + '\n')
 
 
-def output_word_prediction_pairs(fileoutput: str, predictions: list):
+def output_segmentation(fileoutput: str, predictions: list):
     """
     :param fileoutput: path
     :param predictions: [Prediction(...), Pred...] list of predictions
@@ -81,7 +83,7 @@ def output_word_prediction_pairs(fileoutput: str, predictions: list):
 
     with open(fileoutput, 'w') as ofile:
         for p in predictions:
-                ofile.write(p.word + '\t' + p.prediction)
+            ofile.write(p.word + mio.SEPARATOR + mio.segment(p.word, p.prediction) + '\n')
 
 
 def predict_word(model, X: str, output_mapping, window_type, window_size: int):
@@ -134,7 +136,7 @@ def createLayers(indim: int, outdim: int, init: str, activation: str, hidden: in
     return layers
 
 
-def train_model(model, X, Y, epochs: int, batches: int, lossf: str, opt: str, callbacks=[]):
+def train_model(model, X, Y, epochs: int, batches: int, lossf: str, opt: str, callbacks=[], verbose=1):
     """
      :param model: NN-Model (ex.: Sequential)
      :param X: input list of arrays
@@ -147,19 +149,15 @@ def train_model(model, X, Y, epochs: int, batches: int, lossf: str, opt: str, ca
     """
 
     model.compile(loss=lossf, optimizer=opt, metrics=['accuracy'])
-    model.fit(X, Y, nb_epoch=epochs, batch_size=batches, callbacks=callbacks, validation_split=0.1)
+    model.fit(X, Y, nb_epoch=epochs, batch_size=batches, callbacks=callbacks, validation_split=0.1, verbose=verbose)
 
 
-def build_and_train(param: str):
+def build_and_train(input: list, verbose=1):
     """
-    :param param: file-path
+    :param input: [['<s>', 'START'], ['a', 'B'], ...]
     :return model: NeuralNetwork (already trained)
     :return output_mapping: {'B': [1 0 ...], ...}
     """
-
-    input = []
-    for line in mio.read_file(param):
-        input.append(line.strip('\n').split('\t'))
 
     # process_training_input will apply a windowing function to the input just before
     # transforming it (list of symbols) into appropriately sized
@@ -181,13 +179,106 @@ def build_and_train(param: str):
         seed=561,
         layers=createLayers(indim, outdim, init, activation, HIDDEN_LAYER))
 
-    callbacks = [EarlyStopping(monitor='val_loss', patience=2)]
+    callbacks = [EarlyStopping(monitor='val_loss', patience=EARLYSTOP_PATIENCE)]
 
-    train_model(model, input_matrix, output_matrix, epochs, batches, loss, optimizer, callbacks)
-    scores = model.evaluate(input_matrix, output_matrix)
-    print("%s: %.2f%%" % (model.metrics_names[1], scores[1] * 100))
+    train_model(model, input_matrix, output_matrix, epochs, batches, loss, optimizer, callbacks, verbose=verbose)
+    scores = model.evaluate(input_matrix, output_matrix, verbose=verbose)
+    if verbose == 1:
+        print("%s: %.2f%%" % (model.metrics_names[1], scores[1] * 100))
 
     return model, output_mapping
+
+
+def read_training_input(path: str):
+    """
+    :param path: path to file
+    :return: [['<s>', 'START'], ['a', 'B'], ...]
+    """
+
+    input = []
+    for line in mio.read_file(path):
+        input.append(line.strip('\n').split('\t'))
+
+    return input
+
+
+def train_predict_output(trainingpath: str, wordspath: str, output):
+    """
+    :param trainingpath: path to file
+    :param wordspath: path to file
+    :param output: function to use for outputtin
+    """
+
+    input = read_training_input(trainingpath)
+
+    model, output_mapping = build_and_train(input)
+
+    predictions = predict_file(wordspath, model, output_mapping, WINDOW_TYPE, WINDOW_SIZE)
+
+    output(wordspath + '.PRED', predictions)
+
+
+def benchmark(trainingpath: str, develpath: str, wordspath: str):
+    """
+    :param trainingpath: path to file containing the trainset words and their segmentations
+    :param develpath: path to file containing the develset words and their segmentations
+    :param wordspath: path to file containing the develset words
+    """
+
+    input = read_training_input(trainingpath)
+    develset = read_training_input(develpath)
+    expected_symbols = [x[1] for x in develset if x[1] not in [mio.START, mio.STOP]]
+
+    print('=== Benchmark ===\n')
+    for window_size in [2]:
+        for window_type in [mio.use_left_window, mio.use_center_window, mio.use_right_window]:
+            for hidden_layer in [1]:
+                for epochs in [150, 250]:
+                    for activation in ['sigmoid', 'relu', 'tanh', 'softmax']:
+                        for optimizer in ['sgd', 'adam', 'rmsprop']:
+                            for loss in ['binary_crossentropy', 'mean_squared_error']:
+                                for earlystop_patience in [5, 10]:
+                                    global WINDOW_SIZE
+                                    WINDOW_SIZE = window_size
+                                    global WINDOW_TYPE
+                                    WINDOW_TYPE = window_type
+                                    global HIDDEN_LAYER
+                                    HIDDEN_LAYER = hidden_layer
+                                    global EPOCHS
+                                    EPOCHS = epochs
+                                    global ACTIVATION
+                                    ACTIVATION = activation
+                                    global OPTIMIZER
+                                    OPTIMIZER = optimizer
+                                    global LOSS
+                                    LOSS = loss
+                                    global EARLYSTOP_PATIENCE
+                                    EARLYSTOP_PATIENCE = earlystop_patience
+
+                                    model, output_mapping = build_and_train(input, verbose=0)
+                                    predictions = predict_file(wordspath, model, output_mapping, WINDOW_TYPE, WINDOW_SIZE)
+                                    pred_symbols = [x for pred in predictions for x in pred.prediction]
+                                    metric = eval.generate_metrics(expected_symbols, pred_symbols)[0]
+                                    print(hyperparameters_tostring() + \
+                                          '--> F-Score=' + str(metric.get_fscore()) + \
+                                          ' Precision=' + str(metric.get_precision()) + \
+                                          ' Recall=' + str(metric.get_recall()))
+
+
+def hyperparameters_tostring():
+    """
+    :return: the string representation of the current setup
+    """
+
+    return '[Window size: ' + str(WINDOW_SIZE) + '; ' +\
+            'Window type: ' + str(WINDOW_TYPE.__name__) + '; ' +\
+            'Hidden layers: ' + str(HIDDEN_LAYER) + '; ' +\
+            'Epoch size: ' + str(EPOCHS) + '; ' +\
+            'Activation: ' + ACTIVATION + '; ' +\
+            'Optimizer: ' + OPTIMIZER + '; ' +\
+            'Loss: ' + LOSS + '; ' +\
+            'Initialization: ' + INIT + '; ' +\
+            'Early stopping patience: ' + str(EARLYSTOP_PATIENCE) + ']'
 
 
 def main():
@@ -197,24 +288,25 @@ def main():
     trainingpath = sys.argv[1:][0]
     wordspath = sys.argv[1:][1]
 
-    model, output_mapping = build_and_train(trainingpath)
-    predictions = predict_file(wordspath, model, output_mapping, WINDOW_TYPE, WINDOW_SIZE)
-    output_predictions(wordspath + '.PRED', predictions)
+    train_predict_output(trainingpath, wordspath, output_segmentation)
+    #benchmark(trainingpath, 'test_input/en/bmes/goldstd_develset.segmentation', wordspath)
 
 
 """
  HYPER PARAMETERS
 """
-WINDOW_SIZE = 3
+WINDOW_SIZE = 2
 WINDOW_TYPE = mio.use_left_window
 HIDDEN_LAYER = 1
-EPOCHS = 200
-ACTIVATION = 'relu'
+EPOCHS = 350
+ACTIVATION = 'tanh'
 OPTIMIZER = 'adam'
 LOSS = 'binary_crossentropy'
 INIT = 'uniform'
-mio.END = 'M'
-mio.SINGLE = 'B'
+EARLYSTOP_PATIENCE = 10
+
+#mio.END = 'M'
+#mio.SINGLE = 'B'
 
 
 if __name__ == "__main__":
