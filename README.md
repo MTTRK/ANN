@@ -148,7 +148,7 @@ it by brute-forcing our way through the different combinations of these:
 The benchmarking we conducted involved the **{B, M, E, S}** classes (classes for the characters [begin, middle, end, single]),
 **test_input/en/bmes/goldstd_trainset.segmentation** and the **test_input/en/goldstd_develset.words**.
 
-Although the numbers look good sometimes (F-Score=0.99...), this still is sadly a poor performance. The endings barely get recognized. The evaluation considers ['B', 'S'] TRUE and ['E', 'M'] FALSE.
+Although the numbers look good sometimes (F-Score=0.99...), this still sadly is a poor performance. The endings barely get recognized. The evaluation considers ['B', 'S'] TRUE and ['E', 'M'] FALSE.
 
 
 ## Inference
