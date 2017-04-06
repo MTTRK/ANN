@@ -295,15 +295,15 @@ def main():
 """
  HYPER PARAMETERS
 """
-WINDOW_SIZE = 2
+WINDOW_SIZE = 3
 WINDOW_TYPE = mio.use_left_window
 HIDDEN_LAYER = 1
-EPOCHS = 350
+EPOCHS = 250
 ACTIVATION = 'tanh'
 OPTIMIZER = 'adam'
 LOSS = 'binary_crossentropy'
 INIT = 'uniform'
-EARLYSTOP_PATIENCE = 10
+EARLYSTOP_PATIENCE = 15
 
 #mio.END = 'M'
 #mio.SINGLE = 'B'
