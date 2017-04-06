@@ -12,8 +12,7 @@ BEGIN = 'B'
 MIDDLE = 'M'
 END = 'E'
 SINGLE = 'S'
-# +finnish: å, ä, ö
-ALPHABET = [START_SIGN, STOP_SIGN, "'", '-'] + list(string.ascii_lowercase)
+ALPHABET = [START_SIGN, STOP_SIGN, "'", '-'] + list(string.ascii_lowercase) + ['å', 'ä', 'ö']
 OUTPUT_ALPHABET = list({BEGIN, MIDDLE, SINGLE, END})
 
 
