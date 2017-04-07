@@ -62,15 +62,6 @@ Epoch 200/200
 ```
 The output is in the following format:
 ```
-mt:en MT$ ls -l
-total 328
-drwxr-xr-x  6 MT  staff    204 Mar 23 22:28 bm
-drwxr-xr-x  6 MT  staff    204 Mar 23 22:24 bmes
--rw-r--r--  1 MT  staff  16004 Mar 23 18:28 goldstd_combined.words
--rw-r--r--  1 MT  staff  47182 Mar 23 22:35 goldstd_combined.words.PREDICTIONS
--rw-r--r--  1 MT  staff  36880 Mar 21 20:44 goldstd_combined.words_and_segments_with_duplicates
--rw-r--r--  1 MT  staff  34177 Mar 23 20:45 goldstd_combined.words_and_segments_without_duplicates
--rw-r--r--  1 MT  staff  21734 Mar  8 23:44 goldstd_trainset.words_and_segments
 mt:en MT$ head -n 20 goldstd_combined.words.PREDICTIONS
 START
 B
@@ -155,19 +146,6 @@ The F-Score, Precision and Recall values are aggregated over the entire developm
 ## Inference
 After a Train & Prediction run:
 ```
-mt:en MT$ ll
-total 360
--rw-r--r--  1 MT  staff  30740 Apr  1 16:25 benchmark.txt
-drwxr-xr-x  4 MT  staff    136 Mar 31 22:11 bm
-drwxr-xr-x  4 MT  staff    136 Mar 31 22:28 bmes
--rw-r--r--  1 MT  staff  16003 Mar 29 01:00 goldstd_combined.words
--rw-r--r--  1 MT  staff  36880 Mar 21 20:44 goldstd_combined.words_and_segments
--rw-r--r--  1 MT  staff   6568 Mar 29 01:00 goldstd_develset.words
--rw-r--r--  1 MT  staff  13580 Apr  1 16:29 goldstd_develset.words.PRED
--rw-r--r--  1 MT  staff  15145 Mar 29 00:59 goldstd_develset.words_and_segments
--rw-r--r--  1 MT  staff  14053 Mar 29 00:59 goldstd_develset.words_and_segments_without_duplicates
--rw-r--r--  1 MT  staff   9434 Mar 29 01:00 goldstd_trainset.words
--rw-r--r--  1 MT  staff  21734 Mar  8 23:44 goldstd_trainset.words_and_segments
 mt:en MT$ paste goldstd_develset.words_and_segments_without_duplicates goldstd_develset.words.PRED | cut -f1,2,4 > goldstd_develset_INFERENCE
 mt:en MT$ head goldstd_develset_INFERENCE 
 accompanied	ac compani ed	accompanied

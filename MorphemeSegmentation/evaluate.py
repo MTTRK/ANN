@@ -98,8 +98,10 @@ def generate_metrics(expectations: list, predictions: list):
 
     for word_index in range(0, len(expectations)):
         tn, tp, fn, fp = (0, 0, 0, 0)
+        if len(expectations[word_index]) == 1:
+            continue
 
-        for sym_index in range(0, len(expectations[word_index])):
+        for sym_index in range(1, len(expectations[word_index])):
             current_exp = expectations[word_index][sym_index]
             current_pred = predictions[word_index][sym_index]
 
@@ -132,9 +134,9 @@ def get_average_metrics(metrics):
         avg_precision += metric.get_precision()
         avg_recall += metric.get_recall()
 
-        avg_fscore /= len(metrics)
-        avg_precision /= len(metrics)
-        avg_recall /= len(metrics)
+    avg_fscore /= len(metrics)
+    avg_precision /= len(metrics)
+    avg_recall /= len(metrics)
 
     return avg_fscore, avg_precision, avg_recall
 
