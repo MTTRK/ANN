@@ -233,11 +233,11 @@ def benchmark(trainingpath: str, develpath: str, wordspath: str):
     for window_size in [2, 3, 4]:
         for window_type in [mio.use_left_window, mio.use_center_window, mio.use_right_window]:
             for hidden_layer in [1, 2, 3]:
-                for epochs in [150, 250, 300]:
+                for epochs in [200, 300, 400]:
                     for activation in ['sigmoid', 'relu', 'tanh', 'softmax']:
-                        for optimizer in ['sgd', 'adam', 'rmsprop']:
-                            for loss in ['binary_crossentropy', 'mean_squared_error']:
-                                for earlystop_patience in [10, 15]:
+                        for optimizer in ['adam', 'rmsprop']:
+                            for loss in ['mean_squared_error', 'binary_crossentropy']:
+                                for earlystop_patience in [10, 20]:
                                     global WINDOW_SIZE
                                     WINDOW_SIZE = window_size
                                     global WINDOW_TYPE
@@ -256,13 +256,18 @@ def benchmark(trainingpath: str, develpath: str, wordspath: str):
                                     EARLYSTOP_PATIENCE = earlystop_patience
 
                                     model, output_mapping = build_and_train(input, verbose=0)
+
                                     predictions = predict_file(wordspath, model, output_mapping, WINDOW_TYPE, WINDOW_SIZE)
                                     pred_lists = [pred.prediction for pred in predictions]
-                                    metric = eval.generate_metrics(expected_symbols, pred_lists)[0]
+
+                                    aggr_metric = eval.get_aggregated_metric(
+                                                    eval.generate_metrics(expected_symbols, pred_lists))
+
                                     print(hyperparameters_tostring() + \
-                                          '--> F-Score=' + str(metric.get_fscore()) + \
-                                          ' Precision=' + str(metric.get_precision()) + \
-                                          ' Recall=' + str(metric.get_recall()))
+                                          '--> F-Score=' + str(aggr_metric.get_fscore()) + \
+                                          ' Precision=' + str(aggr_metric.get_precision()) + \
+                                          ' Recall=' + str(aggr_metric.get_recall()),
+                                          file=sys.stderr)
 
 
 def hyperparameters_tostring():
@@ -288,22 +293,22 @@ def main():
     trainingpath = sys.argv[1:][0]
     wordspath = sys.argv[1:][1]
 
-    #train_predict_output(trainingpath, wordspath, output_segmentation)
-    benchmark(trainingpath, 'test_input/finn/bmes/goldstd_develset.segmentation', wordspath)
+    train_predict_output(trainingpath, wordspath, output_segmentation)
+    #benchmark(trainingpath, 'test_input/finn/bmes/goldstd_develset.segmentation', wordspath)
 
 
 """
  HYPER PARAMETERS
 """
-WINDOW_SIZE = 3
+WINDOW_SIZE = 2
 WINDOW_TYPE = mio.use_left_window
-HIDDEN_LAYER = 1
-EPOCHS = 250
-ACTIVATION = 'relu'
-OPTIMIZER = 'adam'
-LOSS = 'binary_crossentropy'
+HIDDEN_LAYER = 3
+EPOCHS = 300
+ACTIVATION = 'tanh'
+OPTIMIZER = 'rmsprop'
+LOSS = 'mean_squared_error'
 INIT = 'uniform'
-EARLYSTOP_PATIENCE = 30
+EARLYSTOP_PATIENCE = 15
 
 #mio.END = 'M'
 #mio.SINGLE = 'B'
