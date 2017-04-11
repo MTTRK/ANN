@@ -46,15 +46,14 @@ class Metric:
         return 2 * (self.get_precision() * self.get_recall()) / (self.get_precision() + self.get_recall() + 0.00001)
 
 
-def read_symbols(filepath: str):
+def create_word_blocks(symbols: list):
     """
-    :param filepath: input file
+    :param symbols: ['START', 'B', ..., 'STOP', 'START', ...]
     :return: list of symbol blocks (word segmentations) [['B', ...], [...]]
     """
-
     blocks = []
     current = []
-    for symbol in mio.read_file(filepath):
+    for symbol in symbols:
         sym = symbol.strip(' \n\t')
         if sym == mio.START:
             if current:
@@ -68,6 +67,15 @@ def read_symbols(filepath: str):
         blocks.append(current)
 
     return blocks
+
+
+def read_symbols(filepath: str):
+    """
+    :param filepath: input file
+    :return: list of symbol blocks (word segmentations) [['B', ...], [...]]
+    """
+
+    return create_word_blocks(mio.read_file(filepath))
 
 
 def ensure_validity(expectations: list, predictions: list):

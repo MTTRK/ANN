@@ -227,7 +227,7 @@ def benchmark(trainingpath: str, develpath: str, wordspath: str):
 
     input = read_training_input(trainingpath)
     develset = read_training_input(develpath)
-    expected_symbols = [x[1] for x in develset if x[1] not in [mio.START, mio.STOP]]
+    expected_symbols = eval.create_word_blocks([x[1] for x in develset])
 
     print('=== Benchmark ===\n')
     for window_size in [2, 3, 4]:
@@ -257,8 +257,8 @@ def benchmark(trainingpath: str, develpath: str, wordspath: str):
 
                                     model, output_mapping = build_and_train(input, verbose=0)
                                     predictions = predict_file(wordspath, model, output_mapping, WINDOW_TYPE, WINDOW_SIZE)
-                                    pred_symbols = [x for pred in predictions for x in pred.prediction]
-                                    metric = eval.generate_metrics(expected_symbols, pred_symbols)[0]
+                                    pred_lists = [pred.prediction for pred in predictions]
+                                    metric = eval.generate_metrics(expected_symbols, pred_lists)[0]
                                     print(hyperparameters_tostring() + \
                                           '--> F-Score=' + str(metric.get_fscore()) + \
                                           ' Precision=' + str(metric.get_precision()) + \
@@ -288,8 +288,8 @@ def main():
     trainingpath = sys.argv[1:][0]
     wordspath = sys.argv[1:][1]
 
-    train_predict_output(trainingpath, wordspath, output_segmentation)
-    #benchmark(trainingpath, 'test_input/en/bmes/goldstd_develset.segmentation', wordspath)
+    #train_predict_output(trainingpath, wordspath, output_segmentation)
+    benchmark(trainingpath, 'test_input/finn/bmes/goldstd_develset.segmentation', wordspath)
 
 
 """
