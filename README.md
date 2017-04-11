@@ -117,29 +117,12 @@ it by brute-forcing our way through the different combinations of these:
 * EARLYSTOP_PATIENCE
 ```
 === Benchmark ===
-
-[Window size: 2; Window type: use_left_window; Hidden layers: 1; Epoch size: 150; Activation: sigmoid; Optimizer: sgd; Loss: binary_crossentropy; Initialization: uniform; Early stopping patience: 5]--> F-Score=0.0 Precision=0.0 Recall=0.0
-[Window size: 2; Window type: use_left_window; Hidden layers: 1; Epoch size: 150; Activation: sigmoid; Optimizer: sgd; Loss: binary_crossentropy; Initialization: uniform; Early stopping patience: 10]--> F-Score=0.0 Precision=0.0 Recall=0.0
-[Window size: 2; Window type: use_left_window; Hidden layers: 1; Epoch size: 150; Activation: sigmoid; Optimizer: sgd; Loss: mean_squared_error; Initialization: uniform; Early stopping patience: 5]--> F-Score=0.0 Precision=0.0 Recall=0.0
 ...
-[Window size: 2; Window type: use_left_window; Hidden layers: 1; Epoch size: 150; Activation: relu; Optimizer: adam; Loss: binary_crossentropy; Initialization: uniform; Early stopping patience: 5]--> F-Score=0.0 Precision=0.0 Recall=0.0
-[Window size: 2; Window type: use_left_window; Hidden layers: 1; Epoch size: 150; Activation: relu; Optimizer: adam; Loss: binary_crossentropy; Initialization: uniform; Early stopping patience: 10]--> F-Score=0.0 Precision=0.0 Recall=0.0
-[Window size: 2; Window type: use_left_window; Hidden layers: 1; Epoch size: 150; Activation: relu; Optimizer: adam; Loss: mean_squared_error; Initialization: uniform; Early stopping patience: 5]--> F-Score=0.999985000124999 Precision=0.9999900000999989 Recall=0.9999900000999989
-[Window size: 2; Window type: use_left_window; Hidden layers: 1; Epoch size: 150; Activation: relu; Optimizer: adam; Loss: mean_squared_error; Initialization: uniform; Early stopping patience: 10]--> F-Score=0.999985000124999 Precision=0.9999900000999989 Recall=0.9999900000999989
-[Window size: 2; Window type: use_left_window; Hidden layers: 1; Epoch size: 150; Activation: relu; Optimizer: rmsprop; Loss: binary_crossentropy; Initialization: uniform; Early stopping patience: 5]--> F-Score=0.999985000124999 Precision=0.9999900000999989 Recall=0.9999900000999989
-[Window size: 2; Window type: use_left_window; Hidden layers: 1; Epoch size: 150; Activation: relu; Optimizer: rmsprop; Loss: binary_crossentropy; Initialization: uniform; Early stopping patience: 10]--> F-Score=0.999985000124999 Precision=0.9999900000999989 Recall=0.9999900000999989
-[Window size: 2; Window type: use_left_window; Hidden layers: 1; Epoch size: 150; Activation: relu; Optimizer: rmsprop; Loss: mean_squared_error; Initialization: uniform; Early stopping patience: 5]--> F-Score=0.999985000124999 Precision=0.9999900000999989 Recall=0.9999900000999989
-[Window size: 2; Window type: use_left_window; Hidden layers: 1; Epoch size: 150; Activation: relu; Optimizer: rmsprop; Loss: mean_squared_error; Initialization: uniform; Early stopping patience: 10]--> F-Score=0.999985000124999 Precision=0.9999900000999989 Recall=0.9999900000999989
-...
-[Window size: 2; Window type: use_left_window; Hidden layers: 1; Epoch size: 250; Activation: tanh; Optimizer: adam; Loss: binary_crossentropy; Initialization: uniform; Early stopping patience: 5]--> F-Score=0.999985000124999 Precision=0.9999900000999989 Recall=0.9999900000999989
-[Window size: 2; Window type: use_left_window; Hidden layers: 1; Epoch size: 250; Activation: tanh; Optimizer: adam; Loss: binary_crossentropy; Initialization: uniform; Early stopping patience: 10]--> F-Score=0.999985000124999 Precision=0.9999900000999989 Recall=0.9999900000999989
-[Window size: 2; Window type: use_left_window; Hidden layers: 1; Epoch size: 250; Activation: tanh; Optimizer: adam; Loss: mean_squared_error; Initialization: uniform; Early stopping patience: 5]--> F-Score=0.999985000124999 Precision=0.9999900000999989 Recall=0.9999900000999989
 ...
 ```
 The benchmarking we conducted involved the **{B, M, E, S}** classes (classes for the characters [begin, middle, end, single]),
-**test_input/en/bmes/goldstd_trainset.segmentation** and the **test_input/en/goldstd_develset.words**.
+**test_input/finn/bmes/goldstd_trainset.segmentation** and the **test_input/finn/goldstd_develset.words**.
 
-Although the numbers look good sometimes (F-Score=0.99...), this still sadly is a poor performance. The endings barely get recognized. The evaluation considers ['B', 'S'] TRUE and ['E', 'M'] FALSE.
 The F-Score, Precision and Recall values are aggregated over the entire development wordset, i.e. they are not the average per word metrics.
 
 

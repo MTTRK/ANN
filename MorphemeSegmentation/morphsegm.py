@@ -230,14 +230,14 @@ def benchmark(trainingpath: str, develpath: str, wordspath: str):
     expected_symbols = [x[1] for x in develset if x[1] not in [mio.START, mio.STOP]]
 
     print('=== Benchmark ===\n')
-    for window_size in [2]:
+    for window_size in [2, 3, 4]:
         for window_type in [mio.use_left_window, mio.use_center_window, mio.use_right_window]:
-            for hidden_layer in [1]:
-                for epochs in [150, 250]:
+            for hidden_layer in [1, 2, 3]:
+                for epochs in [150, 250, 300]:
                     for activation in ['sigmoid', 'relu', 'tanh', 'softmax']:
                         for optimizer in ['sgd', 'adam', 'rmsprop']:
                             for loss in ['binary_crossentropy', 'mean_squared_error']:
-                                for earlystop_patience in [5, 10]:
+                                for earlystop_patience in [10, 15]:
                                     global WINDOW_SIZE
                                     WINDOW_SIZE = window_size
                                     global WINDOW_TYPE
@@ -299,11 +299,11 @@ WINDOW_SIZE = 3
 WINDOW_TYPE = mio.use_left_window
 HIDDEN_LAYER = 1
 EPOCHS = 250
-ACTIVATION = 'tanh'
+ACTIVATION = 'relu'
 OPTIMIZER = 'adam'
 LOSS = 'binary_crossentropy'
 INIT = 'uniform'
-EARLYSTOP_PATIENCE = 15
+EARLYSTOP_PATIENCE = 30
 
 #mio.END = 'M'
 #mio.SINGLE = 'B'
