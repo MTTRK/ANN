@@ -300,15 +300,15 @@ def main():
 """
  HYPER PARAMETERS
 """
-WINDOW_SIZE = 2
-WINDOW_TYPE = mio.use_left_window
-HIDDEN_LAYER = 3
-EPOCHS = 300
-ACTIVATION = 'tanh'
-OPTIMIZER = 'rmsprop'
+WINDOW_SIZE = 4
+WINDOW_TYPE = mio.use_center_window
+HIDDEN_LAYER = 1
+EPOCHS = 400
+ACTIVATION = 'relu'
+OPTIMIZER = 'adam'
 LOSS = 'mean_squared_error'
 INIT = 'uniform'
-EARLYSTOP_PATIENCE = 15
+EARLYSTOP_PATIENCE = 20
 
 #mio.END = 'M'
 #mio.SINGLE = 'B'
