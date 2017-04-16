@@ -237,7 +237,6 @@ def benchmark(trainingpath: str, develpath: str, wordspath: str):
                     for activation in ['sigmoid', 'relu', 'tanh', 'softmax']:
                         for optimizer in ['adam', 'rmsprop']:
                             for loss in ['mean_squared_error', 'binary_crossentropy']:
-                                for earlystop_patience in [10, 20]:
                                     global WINDOW_SIZE
                                     WINDOW_SIZE = window_size
                                     global WINDOW_TYPE
@@ -252,8 +251,6 @@ def benchmark(trainingpath: str, develpath: str, wordspath: str):
                                     OPTIMIZER = optimizer
                                     global LOSS
                                     LOSS = loss
-                                    global EARLYSTOP_PATIENCE
-                                    EARLYSTOP_PATIENCE = earlystop_patience
 
                                     model, output_mapping = build_and_train(input, verbose=0)
 
@@ -293,8 +290,8 @@ def main():
     trainingpath = sys.argv[1:][0]
     wordspath = sys.argv[1:][1]
 
-    #train_predict_output(trainingpath, wordspath, output_segmentation)
-    benchmark(trainingpath, 'test_input/finn/bmes/goldstd_develset.segmentation', wordspath)
+    train_predict_output(trainingpath, wordspath, output_segmentation)
+    #benchmark(trainingpath, 'test_input/finn/bmes/goldstd_develset.segmentation', wordspath)
 
 
 """
@@ -308,7 +305,7 @@ ACTIVATION = 'relu'
 OPTIMIZER = 'adam'
 LOSS = 'mean_squared_error'
 INIT = 'uniform'
-EARLYSTOP_PATIENCE = 20
+EARLYSTOP_PATIENCE = 100
 
 #mio.END = 'M'
 #mio.SINGLE = 'B'
