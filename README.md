@@ -11,14 +11,14 @@ Here we are going to concern ourselves with the following languages: english, hu
 ### prep_data.py
 Prepares the training data for the ANN
 ```
-mt:MorphemeSegmentation MT$ head -n 4 test_input/en/goldstd_trainset.words_and_segments
+$ head -n 4 test_input/en/goldstd_trainset.words_and_segments
 ablatives       ablative s
 abounded        abound ed
 abrogate        abrogate
 abusing ab us ing
 ...
-mt:MorphemeSegmentation MT$ cat test_input/en/goldstd_trainset.words_and_segments | python3.5 prep_data.py > file
-mt:MorphemeSegmentation MT$ head -n 50 file
+$ cat test_input/en/goldstd_trainset.words_and_segments | python3.5 prep_data.py > file
+$ head -n 50 file
 <s>     START
 a       B
 b       M
@@ -49,7 +49,7 @@ provided by *prep_data.py*. Single words will be classified alone, the START-STO
 mark the beginning and ending of these.
 * Once the NN-model is 'ready to go', it will be used to classify word-segments
 ```
-mt:MorphemeSegmentation MT$ python3.5 morphsegm.py test_input/en/bm/goldstd_trainset.segmentation test_input/en/goldstd_combined.words
+$ python3.5 morphsegm.py test_input/en/bm/goldstd_trainset.segmentation test_input/en/goldstd_combined.words
 Using TensorFlow backend.
 Epoch 1/200
 8726/8726 [==============================] - 0s - loss: 3.6211 - acc: 0.7500
@@ -62,7 +62,7 @@ Epoch 200/200
 ```
 The output is in the following format:
 ```
-mt:en MT$ head -n 20 goldstd_combined.words.PREDICTIONS
+$ head -n 20 goldstd_combined.words.PREDICTIONS
 START
 B
 M
@@ -129,17 +129,17 @@ The F-Score, Precision and Recall values are aggregated over the entire developm
 ## Inference
 After a Train & Prediction run:
 ```
-mt:en MT$ paste goldstd_develset.words_and_segments_without_duplicates goldstd_develset.words.PRED | cut -f1,2,4 > goldstd_develset_INFERENCE
-mt:en MT$ head goldstd_develset_INFERENCE 
-accompanied	ac compani ed	accompanied
-accompaniment	ac compani ment	accompaniment
-acknowledging	ac knowledg ing	acknowledging
-acquisition	acquis ition	acquisition
-acquisitions'	acquis ition s '	acquisition s '
-acupuncture	acupuncture	acupuncture
-acupuncture's	acupuncture 's	acupuncture 's
-adjudged	ad judg ed	ad judged
-advantageously	advant age ous ly	advantageously
-afire	a fire	afire
+$ paste goldstd_develset.words_and_segments_without_duplicates goldstd_develset.words.PRED | cut -f1,2,4 > goldstd_develset_INFERENCE
+$ head goldstd_develset_INFERENCE 
+a-rajan	a - raja n	a- raja n
+ajanmukaisuudesta	aja n mukais uude sta	ajan mukais uude sta
+alttonsa	altto nsa	altto nsa
+alushame	alus hame	alus hame
+anttilaisen	anttilaise n	anttilaise n
+arvonmääritys	arvo n määrit ys	arvon määrit ys
+arvostellutta	arvostel lu tta	arvostellu t ta
+asfalttitiet	asfaltti tie t	asfaltti tie t
+avaruusviraston	avar uus virasto n	avaruus virasto n
+ayrshiren	ayrshire n	ayrs hiren
 ```
-This file can be found here: **test_input/en/**
+This file can be found here: **test_input/finn/bmes/**
