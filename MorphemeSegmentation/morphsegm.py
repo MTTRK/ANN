@@ -267,7 +267,7 @@ def benchmark(trainingpath: str, develpath: str, wordspath: str):
                                           '--> F-Score=' + str(aggr_metric.get_fscore()) + \
                                           ' Precision=' + str(aggr_metric.get_precision()) + \
                                           ' Recall=' + str(aggr_metric.get_recall()),
-                                          file=sys.stderr)
+                                          flush=True)
 
 
 def hyperparameters_tostring():
@@ -293,8 +293,8 @@ def main():
     trainingpath = sys.argv[1:][0]
     wordspath = sys.argv[1:][1]
 
-    train_predict_output(trainingpath, wordspath, output_segmentation)
-    #benchmark(trainingpath, 'test_input/finn/bmes/goldstd_develset.segmentation', wordspath)
+    #train_predict_output(trainingpath, wordspath, output_segmentation)
+    benchmark(trainingpath, 'test_input/finn/bmes/goldstd_develset.segmentation', wordspath)
 
 
 """
