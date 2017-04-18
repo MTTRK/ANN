@@ -114,7 +114,6 @@ it by brute-forcing our way through the different combinations of these:
 * OPTIMIZER
 * LOSS
 * INIT
-* EARLYSTOP_PATIENCE
 ```
 === Benchmark ===
 ...
@@ -128,6 +127,7 @@ The F-Score, Precision and Recall values are aggregated over the entire developm
 
 ## Inference
 After a Train & Prediction run:
+{B,M,E,S}:
 ```
 $ paste goldstd_develset.words_and_segments_without_duplicates goldstd_develset.words.PRED | cut -f1,2,4 > goldstd_develset_INFERENCE
 $ head goldstd_develset_INFERENCE 
@@ -142,4 +142,5 @@ asfalttitiet	asfaltti tie t	asfaltti tie t
 avaruusviraston	avar uus virasto n	avaruus virasto n
 ayrshiren	ayrshire n	ayrs hiren
 ```
-This file can be found here: **test_input/finn/bmes/**
+This file can be found here: **test_input/finn/bmes/**.
+There is another one here: **test_input/finn/bm/**.

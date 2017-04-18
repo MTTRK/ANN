@@ -307,8 +307,8 @@ LOSS = 'mean_squared_error'
 INIT = 'uniform'
 EARLYSTOP_PATIENCE = 100
 
-#mio.END = 'M'
-#mio.SINGLE = 'B'
+mio.END = 'M'
+mio.SINGLE = 'B'
 
 
 if __name__ == "__main__":
