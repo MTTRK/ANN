@@ -78,9 +78,9 @@ def create_layers(indim: int, outdim: int, init: str, activation: str, hidden: i
     :param hidden: number of hidden layers in the network
     :return: [Layer, Layer, ...] list of Layer implementations
     """
-    layers = [Dense(input_dim=indim, output_dim=indim, init=init, activation=activation)]
-    layers.extend([Dense(output_dim=indim, init=init, activation=activation) for i in range(0, hidden)])
-    layers.append(Dense(output_dim=outdim, init=init, activation=activation))
+    layers = [Dense(input_dim=indim, units=indim, kernel_initializer=init, activation=activation)]
+    layers.extend([Dense(units=indim, kernel_initializer=init, activation=activation) for i in range(0, hidden)])
+    layers.append(Dense(units=outdim, kernel_initializer=init, activation=activation))
     return layers
 
 
@@ -111,7 +111,7 @@ def build_train_model(ctx: MainContext, verbose: int = 1):
     model.compile(loss=ctx.loss, optimizer=ctx.optimize, metrics=['accuracy'])
 
     model.fit(input_matrix, output_matrix,
-              nb_epoch=ctx.epochs, batch_size=batches, callbacks=callbacks,
+              epochs=ctx.epochs, batch_size=batches, callbacks=callbacks,
               validation_split=0.1, verbose=verbose)
 
     return model
