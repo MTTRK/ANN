@@ -61,6 +61,8 @@ it by brute-forcing our way through the different combinations of these:
 * initialization method
 * early-stopping patience
 ```
+python3.5 morphsegm.py -b -t test_input/en/goldstd_trainset.words_and_segments -w test_input/en/goldstd_develset.words -d test_input/en/goldstd_develset.words_and_segments_without_duplicates
+Using TensorFlow backend.
 === Benchmark ===
 
 [Window size: 2; Window type: 0; Hidden layers: 1; Epoch size: 200; Activation: sigmoid; Optimizer: adam; Loss: mean_squared_error; Initialization: uniform; Early stopping patience: 50]--> F-Score=0.0 Precision=0.0 Recall=0.0
