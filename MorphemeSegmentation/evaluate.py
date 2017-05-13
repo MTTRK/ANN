@@ -1,35 +1,13 @@
-"""
-Expected format for the 2 files being evaluated:
-...
-START
-B
-E
-B
-M
-E
-B
-E
-B
-M
-E
-S
-...
-STOP
-"""
-import sys
 import morph_io as mio
-
-
-POS = [mio.BEGIN, mio.SINGLE]
-NEG = [mio.MIDDLE, mio.END]
+from context import EvaluationContext
+from option import EvaluateOption
 
 
 class Metric:
     """
-    Represents the metrics related to an id (index)
+    Container for holding values necessary to calculate metrics
     """
-
-    def __init__(self, tp=0, tn=0, fp=0, fn=0, index=0):
+    def __init__(self, tp=0, tn=0, fp=0, fn=0, index=1):
         self.true_negative = tn
         self.true_positive = tp
         self.false_negative = fn
@@ -46,93 +24,59 @@ class Metric:
         return 2 * (self.get_precision() * self.get_recall()) / (self.get_precision() + self.get_recall() + 0.00001)
 
 
-def create_word_blocks(symbols: list):
+def ensure_validity(ctx: EvaluationContext):
     """
-    :param symbols: ['START', 'B', ..., 'STOP', 'START', ...]
-    :return: list of symbol blocks (word segmentations) [['B', ...], [...]]
+    Checks the two lists of [['B', 'M', ...], [...], ...]
+    :param ctx: contains expected-actual lists
     """
-    blocks = []
-    current = []
-    for symbol in symbols:
-        sym = symbol.strip(' \n\t')
-        if sym == mio.START:
-            if current:
-                blocks.append(current)
-                current = []
-        elif sym != mio.STOP:
-            current.append(sym)
-
-    # flush the last block
-    if current:
-        blocks.append(current)
-
-    return blocks
-
-
-def read_symbols(filepath: str):
-    """
-    :param filepath: input file
-    :return: list of symbol blocks (word segmentations) [['B', ...], [...]]
-    """
-
-    return create_word_blocks(mio.read_file(filepath))
-
-
-def ensure_validity(expectations: list, predictions: list):
-    """
-    :param expectations: [['B', ...], [...], ...]
-    :param predictions: [['B', ...], [...], ...]
-    """
-
-    if len(expectations) > len(predictions):
+    if len(ctx.expected) > len(ctx.actual):
         raise Exception('List of expected words is longer')
 
-    if len(predictions) > len(expectations):
+    if len(ctx.expected) < len(ctx.actual):
         raise Exception('List of predictions is longer')
 
-    for i in range(0, len(expectations)):
-        if len(expectations[i]) != len(predictions[i]):
-            raise Exception(str(i) + 'th word does not match in length')
+    for i in range(0, len(ctx.expected)):
+        if len(ctx.expected[i]) != len(ctx.actual[i]):
+            raise Exception(str(i + 1) + 'th words do not match in length')
 
 
-def generate_metrics(expectations: list, predictions: list):
+def generate_metrics(ctx: EvaluationContext):
     """
-    :param expectations: [['B', ...], [...], ...]
-    :param predictions: [['B', ...], [...], ...]
-    :return: the list of relevant metrics
+    Generates Metric object by comparing the expected segmentation
+    with the the actual (works with lists of [['B', 'M', ...], [...], ...])
+    :param ctx: contains expected-actual lists
+    :return: the list of relevant Metric-s
     """
-
     metrics = []
-
-    for word_index in range(0, len(expectations)):
+    for word_index in range(0, len(ctx.expected)):
         tn, tp, fn, fp = (0, 0, 0, 0)
-        if len(expectations[word_index]) == 1:
+        # if length is 1, it really isn't interesting to us
+        if len(ctx.expected[word_index]) == 1:
             continue
 
-        for sym_index in range(1, len(expectations[word_index])):
-            current_exp = expectations[word_index][sym_index]
-            current_pred = predictions[word_index][sym_index]
+        for sym_index in range(1, len(ctx.expected[word_index])):
+            current_exp = ctx.expected[word_index][sym_index]
+            current_pred = ctx.actual[word_index][sym_index]
 
-            if current_exp in POS and current_pred in POS:
+            if current_exp in ctx.POS and current_pred in ctx.POS:
                 tp += 1
-            elif current_exp in POS and current_pred in NEG:
+            elif current_exp in ctx.POS and current_pred in ctx.NEG:
                 fn += 1
-            elif current_exp in NEG and current_pred in POS:
+            elif current_exp in ctx.NEG and current_pred in ctx.POS:
                 fp += 1
             else:
                 tn += 1
 
-        metrics.append(Metric(tp, tn, fp, fn, word_index))
+        metrics.append(Metric(tp, tn, fp, fn, word_index + 1))
 
     return metrics
 
 
-def get_average_metrics(metrics):
+def get_average_metrics(metrics: list):
     """
     :param metrics: [Metric, Metric, ...]
     :return: average f-score, precision, recall
     """
-
     avg_fscore = 0.0
     avg_precision = 0.0
     avg_recall = 0.0
@@ -149,12 +93,11 @@ def get_average_metrics(metrics):
     return avg_fscore, avg_precision, avg_recall
 
 
-def get_aggregated_metric(metrics):
+def get_aggregated_metric(metrics: list):
     """
     :param metrics: [Metric, Metric, ...]
-    :return: aggregated metric
+    :return: aggregated Metric
     """
-
     aggregated_metric = Metric()
     for metric in metrics:
         aggregated_metric.false_negative += metric.false_negative
@@ -165,29 +108,31 @@ def get_aggregated_metric(metrics):
 
 
 def main():
-    if len(sys.argv[1:]) != 2:
-        raise Exception('Script needs 2 input-parameters (expected, predictions)')
+    option = EvaluateOption()
+    context = EvaluationContext()
 
-    expectations = read_symbols(sys.argv[1:][0])
-    predictions = read_symbols(sys.argv[1:][1])
+    context.expected = [segment.seg_mapping
+                        for segment in mio.read_goldstd(option.expected_file, context)]
+    context.actual = [segment.seg_mapping
+                      for segment in mio.read_goldstd(option.actual_file, context)]
 
-    ensure_validity(expectations, predictions)
-    metrics = generate_metrics(expectations, predictions)
+    ensure_validity(context)
+    metrics = generate_metrics(context)
 
     aggregated_metric = get_aggregated_metric(metrics)
     avg_fscore, avg_precision, avg_recall = get_average_metrics(metrics)
 
     print('Average F-Score=' + str(avg_fscore) +
-            ' Precision=' + str(avg_precision) +
-            ' Recall=' + str(avg_recall))
+          ' Precision=' + str(avg_precision) +
+          ' Recall=' + str(avg_recall))
 
     print('Aggregated F-Score=' + str(aggregated_metric.get_fscore()) +
-            ' Precision=' + str(aggregated_metric.get_precision()) +
-            ' Recall=' + str(aggregated_metric.get_recall()))
+          ' Precision=' + str(aggregated_metric.get_precision()) +
+          ' Recall=' + str(aggregated_metric.get_recall()))
 
     print('\nPer word:')
     for metric in metrics:
-        print(str(metric.index) + 'th word -->' +
+        print(str(metric.index) + '. word -->' +
               ' F-Score=' + str(metric.get_fscore()) +
               ' Precision=' + str(metric.get_precision()) +
               ' Recall=' + str(metric.get_recall()))

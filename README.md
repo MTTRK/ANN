@@ -1,103 +1,23 @@
-# College Project about Artificial Neural Networks
+# College Project on Artificial Neural Networks
 
 ## WarmUp
 This project contains some exercises that help to embrace the theory of ANN-s, especially RNN-s.
-Also the use of 3rd party libraries like Keras will appear in the code.
+Also the use of 3rd party libraries like Keras appears in the code.
 
 ## MorphemeSegmentation
 Morphological segmentation, which aims to break words into meaning-bearing morphemes, is an important task in natural language processing.
 Here we are going to concern ourselves with the following languages: english, hungarian, etc.
 
-### prep_data.py
-Prepares the training data for the ANN
-```
-$ head -n 4 test_input/en/goldstd_trainset.words_and_segments
-ablatives       ablative s
-abounded        abound ed
-abrogate        abrogate
-abusing ab us ing
-...
-$ cat test_input/en/goldstd_trainset.words_and_segments | python3.5 prep_data.py > file
-$ head -n 50 file
-<s>     START
-a       B
-b       M
-l       M
-a       M
-t       M
-i       M
-v       M
-e       E
-s       S
-</s>    STOP
-<s>     START
-a       B
-b       M
-o       M
-u       M
-n       M
-d       E
-e       B
-d       E
-</s>    STOP
-...
-```
-
 ### morphsegm.py
-* Builds and trains a neural network using the input data in the format
-provided by *prep_data.py*. Single words will be classified alone, the START-STOP tokens
-mark the beginning and ending of these.
+* Builds and trains a neural network.
 * Once the NN-model is 'ready to go', it will be used to classify word-segments
 ```
-$ python3.5 morphsegm.py test_input/en/bm/goldstd_trainset.segmentation test_input/en/goldstd_combined.words
-Using TensorFlow backend.
-Epoch 1/200
-8726/8726 [==============================] - 0s - loss: 3.6211 - acc: 0.7500
-Epoch 2/200
-8726/8726 [==============================] - 0s - loss: 1.5465 - acc: 0.7500
 ...
-Epoch 200/200
-8726/8726 [==============================] - 0s - loss: 0.1643 - acc: 0.9430
-8384/8726 [===========================>..] - ETA: 0sacc: 94.31%
-```
-The output is in the following format:
-```
-$ head -n 20 goldstd_combined.words.PREDICTIONS
-START
-B
-M
-M
-M
-STOP
-START
-B
-M
-M
-M
-M
-M
-mt:en MT$
 ```
 
 ### evaluate.py
-Now that we have some results and can produce new ones, we need a way to be able to assess the quality
-of the predictions. In case of binary decisions (B,M) F-Score can help us out.
-In case of (B,M,E,S), we will consider (B,S) -> True and (E,M) -> False. Then we can apply F-Score.
+Takes 2 files in goldstd format and determines the F-Score like this:
 ```
-Average F-Score=0.7572712758572836 Precision=0.9348396501457724 Recall=0.682142857142857
-Aggregated F-Score=0.746617915904936 Precision=0.9011473962930273 Recall=0.6373283395755306
-
-Per word:
-0th word --> F-Score=0.5 Precision=1.0 Recall=0.3333333333333333
-1th word --> F-Score=0.5 Precision=1.0 Recall=0.3333333333333333
-2th word --> F-Score=0.5 Precision=1.0 Recall=0.3333333333333333
-3th word --> F-Score=0.6666666666666666 Precision=1.0 Recall=0.5
-4th word --> F-Score=0.8571428571428571 Precision=1.0 Recall=0.75
-5th word --> F-Score=1.0 Precision=1.0 Recall=1.0
-6th word --> F-Score=1.0 Precision=1.0 Recall=1.0
-7th word --> F-Score=0.8 Precision=1.0 Recall=0.6666666666666666
-8th word --> F-Score=0.4 Precision=1.0 Recall=0.25
-9th word --> F-Score=0.6666666666666666 Precision=1.0 Recall=0.5
 ...
 ```
 The above metrics show how well the network could recognize the beginning of words
@@ -106,41 +26,27 @@ The above metrics show how well the network could recognize the beginning of wor
 ## Benchmark
 Finding the best set of hyperparameters is not an easy task. We are going to try to find
 it by brute-forcing our way through the different combinations of these:
-* WINDOW_SIZE
-* WINDOW_TYPE
-* HIDDEN_LAYER
-* EPOCHS
-* ACTIVATION
-* OPTIMIZER
-* LOSS
-* INIT
+* size of window
+* type of window
+* number of hidden layers
+* number of epochs
+* activation function
+* optimization method
+* loss function
+* initialization method
+* early-stopping patience
 ```
-=== Benchmark ===
 ...
-...
 ```
-The benchmarking we conducted involved the **{B, M, E, S}** classes (classes for the characters [begin, middle, end, single]),
-**test_input/finn/bmes/goldstd_trainset.segmentation** and the **test_input/finn/goldstd_develset.words**.
-
-The F-Score, Precision and Recall values are aggregated over the entire development wordset, i.e. they are not the average per word metrics.
 
 
-## Inference
-After a Train & Prediction run:
-{B,M,E,S}:
+## Hungarian corpus
+I cleaned the data using the following tools:
 ```
-$ paste goldstd_develset.words_and_segments_without_duplicates goldstd_develset.words.PRED | cut -f1,2,4 > goldstd_develset_INFERENCE
-$ head goldstd_develset_INFERENCE 
-a-rajan	a - raja n	a- raja n
-ajanmukaisuudesta	aja n mukais uude sta	ajan mukais uude sta
-alttonsa	altto nsa	altto nsa
-alushame	alus hame	alus hame
-anttilaisen	anttilaise n	anttilaise n
-arvonmääritys	arvo n määrit ys	arvon määrit ys
-arvostellutta	arvostel lu tta	arvostellu t ta
-asfalttitiet	asfaltti tie t	asfaltti tie t
-avaruusviraston	avar uus virasto n	avaruus virasto n
-ayrshiren	ayrshire n	ayrs hiren
+date ; zgrep -vE "(\[|\]|\}|\{|@|#|\\^|\\$|<|>|_|\+|\*|\||\\\|\?|\/|\%|\!|\:|\;|\.|\,|[0-9]|\"|\(|\))" webcorp.100M.segmented.gz | tr 'ÍÖÜÓŐÚŰÉÁ[:upper:]' 'íöüóőúűéá[:lower:]' | sort -u | head -n -254 | tail -n +400 | grep -vE '\-\-' | sort -R | gzip > webcorp.100M.segmented_filtered.gz ; date
+
+zcat webcorp.filtered.2.4M.segmented.gz | sed 's/\(.\)/\1\n/g' | sort -u | tr '\n' ','
+<<GIVES BACK EVERY CHARACTER USED>>
+
+zgrep -vE "[<<EVERY NON-ENGLISH/HUNGARIAN CHARACTER>>]" webcorp.filtered.2.4M.segmented.gz | gzip > webcorp.filtered.2.4M.segmented.gz2
 ```
-This file can be found here: **test_input/finn/bmes/**.
-There is another one here: **test_input/finn/bm/**.

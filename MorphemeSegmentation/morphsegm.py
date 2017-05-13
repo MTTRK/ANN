@@ -1,314 +1,201 @@
-"""
-Expected format for training:
-...
-<s>     START
-a       B
-n       E
-n       B
-o       M
-t       E
-a       B
-t       E
-i       B
-o       M
-n       E
-s       S
-</s>    STOP
-...
-
-Expected format for predictions:
-...
-ablatives
-abounded
-abrogate
-...
-"""
-import sys
 from keras.models import Sequential
 from keras.callbacks import EarlyStopping
 from keras.layers.core import Dense
 import numpy as np
+from itertools import chain
 import morph_io as mio
+from option import MainOption
+from context import MainContext
+from context import Context
+from context import Prediction
+from context import EvaluationContext
 import evaluate as eval
 
 
-class Prediction:
+def extend_word(word: str, ctx: Context):
     """
-    Wrapper class for the prediction context
+    Extends the word with symbols and returns them as a list
+    :param word: to be extended 'abounded'
+    :param ctx: Context holding the parameters
+    :return: ['<s>','a','b','o','u','n','d','e','d','</s>']
     """
+    symbols = [s for s in word]
+    symbols.insert(0, ctx.START)
+    symbols.append(ctx.STOP)
+    return symbols
 
-    def __init__(self, word, pred):
-        self.word = word
-        self.prediction = pred
 
-
-def predict_file(fileinput: str, model, output_mapping, window_type, window_size: int):
+def predict_words(model, ctx: MainContext):
     """
-    :param fileinput: path to inputfile that contains words
     :param model: NeuralNetwork
-    :param output_mapping: {'B': [1 0 ...], 'E'...}
-    :param window_type: function
-    :param window_size: size of window
-    :return: [Prediction("ablatives", ['B', ...]), Pred....]
+    :param ctx: MainContext containing runtime parameters
+    :return: [Prediction("ablatives", ['B', ...]), Prediction(...), ...]
     """
-
     predictions = []
-    for word in mio.read_file(fileinput):
-        w = word.strip(' \n')
-        current = predict_word(model, w, output_mapping, window_type, window_size)
-        predictions.append(Prediction(w, current))
-
+    for word in ctx.test:
+        _word = word.strip(' \n')
+        current = predict_word(model, _word, ctx)
+        predictions.append(Prediction(_word, current))
     return predictions
 
 
-def output_predictions(fileoutput: str, predictions: list):
-    """
-    :param fileoutput: path
-    :param predictions: [Prediction(...), Pred...] list of predictions
-    """
-
-    with open(fileoutput, 'w') as ofile:
-        for p in predictions:
-            ofile.write(mio.START + '\n')
-            for symbol in p.prediction:
-                ofile.write(symbol + '\n')
-            ofile.write(mio.STOP + '\n')
-
-
-def output_segmentation(fileoutput: str, predictions: list):
-    """
-    :param fileoutput: path
-    :param predictions: [Prediction(...), Pred...] list of predictions
-    """
-
-    with open(fileoutput, 'w') as ofile:
-        for p in predictions:
-            ofile.write(p.word + mio.SEPARATOR + mio.segment(p.word, p.prediction) + '\n')
-
-
-def predict_word(model, X: str, output_mapping, window_type, window_size: int):
+def predict_word(model, word: str, ctx: MainContext):
     """
     :param model: NeuralNetwork (Keras) model
-    :param X: str (ex.: 'abounded')
-    :param output_mapping: {'B': [1 0 ...], 'E'...}
-    :param window_type: the windowing function itself
-    :param window_size: size of the window
+    :param word: str (ex.: 'abounded')
+    :param ctx: MainContext containing runtime parameters
     :return ['B', 'E', 'B', ...]
     """
+    # PREP: abounded --> [<s>,a,b,o,u,n,d,e,d,</s>]
+    symbol_list = extend_word(word, ctx)
 
-    symbols = [s for s in X]
-    symbols.insert(0, mio.START_SIGN)
-    symbols.append(mio.STOP_SIGN)
-
-    symbol_matrix = mio.transform_input(symbols, window_type, window_size)
+    # WINDOW: [<s>,a,b,o,u,n,d,e,d,</s>] --> one-hot matrix of
+    # 3 symbol windows generated from [<s>,<s>,a,b,o,u,n,d,e,d,</s>,</s>]
+    symbol_matrix = mio.transform_input(symbol_list, ctx)
     prediction_matrix = model.predict(symbol_matrix)
 
-    return mio.predictions_to_symbols(prediction_matrix, output_mapping)
+    return mio.predictions_to_symbols(prediction_matrix, ctx)
 
 
-def createNetwork(seed: int, layers: list):
+def create_network(seed: int, layers: list):
     """
     :param seed: int
     :param layers: [Dense(...), ...]
     """
-
     np.random.seed(seed)
-    NN = Sequential()
+    network = Sequential()
     for layer in layers:
-        NN.add(layer)
-    return NN
+        network.add(layer)
+    return network
 
 
-def createLayers(indim: int, outdim: int, init: str, activation: str, hidden: int):
+def create_layers(indim: int, outdim: int, init: str, activation: str, hidden: int):
     """
     :param indim: number of input nodes
-    :param indim: number of output nodes
+    :param outdim: number of output nodes
     :param init: name of initialization function (ex.: uniform)
     :param activation: name of activation function (ex.: relu)
     :param hidden: number of hidden layers in the network
     :return: [Layer, Layer, ...] list of Layer implementations
     """
-
-    layers = []
-    layers.append(Dense(input_dim=indim, output_dim=indim, init=init, activation=activation))
+    layers = [Dense(input_dim=indim, output_dim=indim, init=init, activation=activation)]
     layers.extend([Dense(output_dim=indim, init=init, activation=activation) for i in range(0, hidden)])
     layers.append(Dense(output_dim=outdim, init=init, activation=activation))
     return layers
 
 
-def train_model(model, X, Y, epochs: int, batches: int, lossf: str, opt: str, callbacks=[], verbose=1):
+def build_train_model(ctx: MainContext, verbose: int = 1):
     """
-     :param model: NN-Model (ex.: Sequential)
-     :param X: input list of arrays
-     :param Y: output list of arrays
-     :param epochs: number of rounds
-     :param batches: number of samples per gradient update
-     :param lossf: loss function to be used
-     :param opt: optimizer to be used
-     :param callbacks: [Callback, Callback, ...] list of Callback implementations
+    :param ctx: MainContext containing runtime parameters (hyperparameters)
+    :param verbose: verbosity of the training process
+    :return NeuralNetwork model
     """
+    # [ab,cd] --> ['<s>','a','b','</s>','<s>','c','d','</s>']
+    input_symbol_list = list(chain.from_iterable([extend_word(seg.word, ctx) for seg in ctx.training]))
+    input_matrix = mio.transform_input(input_symbol_list, ctx)
 
-    model.compile(loss=lossf, optimizer=opt, metrics=['accuracy'])
-    model.fit(X, Y, nb_epoch=epochs, batch_size=batches, callbacks=callbacks, validation_split=0.1, verbose=verbose)
-
-
-def build_and_train(input: list, verbose=1):
-    """
-    :param input: [['<s>', 'START'], ['a', 'B'], ...]
-    :return model: NeuralNetwork (already trained)
-    :return output_mapping: {'B': [1 0 ...], ...}
-    """
-
-    # process_training_input will apply a windowing function to the input just before
-    # transforming it (list of symbols) into appropriately sized
-    # vectors (the outputs will just simply be translated into one-hot vectors)
-    input_matrix, input_mapping, output_matrix, output_mapping = \
-        mio.process_training_input(input, WINDOW_TYPE, WINDOW_SIZE)
+    # [[B,M],[B,M]] --> [B,M,B,M]
+    output_symbol_list = list(chain.from_iterable([seg.seg_mapping for seg in ctx.training]))
+    output_matrix = mio.transform_output(output_symbol_list, ctx)
 
     # create and train NN
     indim = len(input_matrix[0])
     outdim = len(output_matrix[0])
     batches = len(input_matrix)
-    activation = ACTIVATION
-    optimizer = OPTIMIZER
-    epochs = EPOCHS
-    loss = LOSS
-    init = INIT
+    callbacks = [EarlyStopping(monitor='val_loss', patience=ctx.earlystop)]
 
-    model = createNetwork(
+    model = create_network(
         seed=561,
-        layers=createLayers(indim, outdim, init, activation, HIDDEN_LAYER))
+        layers=create_layers(indim, outdim, ctx.init, ctx.activate, ctx.hiddenlayer))
 
-    callbacks = [EarlyStopping(monitor='val_loss', patience=EARLYSTOP_PATIENCE)]
+    model.compile(loss=ctx.loss, optimizer=ctx.optimize, metrics=['accuracy'])
 
-    train_model(model, input_matrix, output_matrix, epochs, batches, loss, optimizer, callbacks, verbose=verbose)
-    scores = model.evaluate(input_matrix, output_matrix, verbose=verbose)
-    if verbose == 1:
-        print("%s: %.2f%%" % (model.metrics_names[1], scores[1] * 100))
+    model.fit(input_matrix, output_matrix,
+              nb_epoch=ctx.epochs, batch_size=batches, callbacks=callbacks,
+              validation_split=0.1, verbose=verbose)
 
-    return model, output_mapping
+    return model
 
 
-def read_training_input(path: str):
+def do_train_and_predict(ctx: MainContext):
     """
-    :param path: path to file
-    :return: [['<s>', 'START'], ['a', 'B'], ...]
+    Runs normal train & predict session
+    :param ctx: contains the hyper-parameters
     """
+    ctx.training = mio.read_goldstd(ctx.training, ctx)
+    ctx.test = mio.read_file(ctx.test)
 
-    input = []
-    for line in mio.read_file(path):
-        input.append(line.strip('\n').split('\t'))
-
-    return input
+    model = build_train_model(ctx, 0)
+    predictions = predict_words(model, ctx)
+    mio.output_predictions(predictions, ctx)
 
 
-def train_predict_output(trainingpath: str, wordspath: str, output):
+def do_benchmark(ctx: MainContext):
     """
-    :param trainingpath: path to file
-    :param wordspath: path to file
-    :param output: function to use for outputtin
+    Does benchmarking for finding the best set of parameters
+    :param ctx: contains the hyper-parameters
     """
-
-    input = read_training_input(trainingpath)
-
-    model, output_mapping = build_and_train(input)
-
-    predictions = predict_file(wordspath, model, output_mapping, WINDOW_TYPE, WINDOW_SIZE)
-
-    output(wordspath + '.PRED', predictions)
-
-
-def benchmark(trainingpath: str, develpath: str, wordspath: str):
-    """
-    :param trainingpath: path to file containing the trainset words and their segmentations
-    :param develpath: path to file containing the develset words and their segmentations
-    :param wordspath: path to file containing the develset words
-    """
-
-    input = read_training_input(trainingpath)
-    develset = read_training_input(develpath)
-    expected_symbols = eval.create_word_blocks([x[1] for x in develset])
+    ctx.training = mio.read_goldstd(ctx.training, ctx)
+    ctx.devel = [segment.seg_mapping
+                 for segment in mio.read_goldstd(ctx.devel, ctx)]
+    ctx.test = mio.read_file(ctx.test)
 
     print('=== Benchmark ===\n')
     for window_size in [2, 3, 4]:
-        for window_type in [mio.use_left_window, mio.use_center_window, mio.use_right_window]:
+        for window_type in [0, 1, 2]:
             for hidden_layer in [1, 2, 3]:
                 for epochs in [200, 300, 400]:
                     for activation in ['sigmoid', 'relu', 'tanh', 'softmax']:
                         for optimizer in ['adam', 'rmsprop']:
                             for loss in ['mean_squared_error', 'binary_crossentropy']:
-                                    global WINDOW_SIZE
-                                    WINDOW_SIZE = window_size
-                                    global WINDOW_TYPE
-                                    WINDOW_TYPE = window_type
-                                    global HIDDEN_LAYER
-                                    HIDDEN_LAYER = hidden_layer
-                                    global EPOCHS
-                                    EPOCHS = epochs
-                                    global ACTIVATION
-                                    ACTIVATION = activation
-                                    global OPTIMIZER
-                                    OPTIMIZER = optimizer
-                                    global LOSS
-                                    LOSS = loss
+                                ctx.windowsize = window_size
+                                ctx.windowtype = window_type
+                                ctx.hiddenlayer = hidden_layer
+                                ctx.epochs = epochs
+                                ctx.activate = activation
+                                ctx.optimize = optimizer
+                                ctx.loss = loss
 
-                                    model, output_mapping = build_and_train(input, verbose=0)
+                                model = build_train_model(ctx, verbose=0)
+                                predictions = predict_words(model, ctx)
 
-                                    predictions = predict_file(wordspath, model, output_mapping, WINDOW_TYPE, WINDOW_SIZE)
-                                    pred_lists = [pred.prediction for pred in predictions]
+                                eval_context = EvaluationContext()
+                                eval_context.actual = [pred.prediction for pred in predictions]
+                                eval_context.expected = ctx.devel
 
-                                    aggr_metric = eval.get_aggregated_metric(
-                                                    eval.generate_metrics(expected_symbols, pred_lists))
+                                aggr_metric = eval.get_aggregated_metric(
+                                                eval.generate_metrics(eval_context))
 
-                                    print(hyperparameters_tostring() + \
-                                          '--> F-Score=' + str(aggr_metric.get_fscore()) + \
-                                          ' Precision=' + str(aggr_metric.get_precision()) + \
-                                          ' Recall=' + str(aggr_metric.get_recall()),
-                                          flush=True)
-
-
-def hyperparameters_tostring():
-    """
-    :return: the string representation of the current setup
-    """
-
-    return '[Window size: ' + str(WINDOW_SIZE) + '; ' +\
-            'Window type: ' + str(WINDOW_TYPE.__name__) + '; ' +\
-            'Hidden layers: ' + str(HIDDEN_LAYER) + '; ' +\
-            'Epoch size: ' + str(EPOCHS) + '; ' +\
-            'Activation: ' + ACTIVATION + '; ' +\
-            'Optimizer: ' + OPTIMIZER + '; ' +\
-            'Loss: ' + LOSS + '; ' +\
-            'Initialization: ' + INIT + '; ' +\
-            'Early stopping patience: ' + str(EARLYSTOP_PATIENCE) + ']'
+                                print(str(ctx) +
+                                      '--> F-Score=' + str(aggr_metric.get_fscore()) +
+                                      ' Precision=' + str(aggr_metric.get_precision()) +
+                                      ' Recall=' + str(aggr_metric.get_recall()),
+                                      flush=True)
 
 
 def main():
-    if len(sys.argv[1:]) != 2:
-        raise Exception('Script needs 2 input-parameters (training samples, words to be predicted)')
+    option = MainOption()
+    context = MainContext(
+        _activate=option.activate,
+        _earlystop=option.earlystop,
+        _epochs=option.epochs,
+        _hiddenlayer=option.hiddenlayer,
+        _init=option.init,
+        _loss=option.loss,
+        _windowsize=option.windowsize,
+        _windowtype=option.windowtype,
+        _optimize=option.optimize,
+        _devel=option.devel,
+        _training=option.training,
+        _test=option.words
+    )
+    if option.bmes:
+        context.set_bmes_context()
 
-    trainingpath = sys.argv[1:][0]
-    wordspath = sys.argv[1:][1]
-
-    train_predict_output(trainingpath, wordspath, output_segmentation)
-    #benchmark(trainingpath, 'test_input/finn/bmes/goldstd_develset.segmentation', wordspath)
-
-
-"""
- HYPER PARAMETERS
-"""
-WINDOW_SIZE = 4
-WINDOW_TYPE = mio.use_center_window
-HIDDEN_LAYER = 1
-EPOCHS = 400
-ACTIVATION = 'relu'
-OPTIMIZER = 'adam'
-LOSS = 'mean_squared_error'
-INIT = 'uniform'
-EARLYSTOP_PATIENCE = 100
-
-mio.END = 'M'
-mio.SINGLE = 'B'
+    if option.benchmark:
+        do_benchmark(context)
+    else:
+        do_train_and_predict(context)
 
 
 if __name__ == "__main__":
