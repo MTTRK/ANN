@@ -138,7 +138,7 @@ def do_benchmark(ctx: MainContext):
     ctx.training = mio.read_goldstd(ctx.training, ctx)
     ctx.devel = [segment.seg_mapping
                  for segment in mio.read_goldstd(ctx.devel, ctx)]
-    ctx.test = mio.read_file(ctx.test)
+    ctx.test = list(mio.read_file(ctx.test))
 
     print('=== Benchmark ===\n')
     for window_size in [2, 3, 4]:
