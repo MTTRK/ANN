@@ -31,7 +31,7 @@ class MainOption:
                             action='store_true',
                             help='Flag for the type of classification to use (by default: BM)')
 
-        parser.add_argument('-v',
+        parser.add_argument('-v', '--verbose',
                             action='store_true',
                             help='Verbose logging')
 
