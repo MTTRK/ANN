@@ -84,10 +84,9 @@ def create_layers(indim: int, outdim: int, init: str, activation: str, hidden: i
     return layers
 
 
-def build_train_model(ctx: MainContext, verbose: int = 1):
+def build_train_model(ctx: MainContext):
     """
     :param ctx: MainContext containing runtime parameters (hyperparameters)
-    :param verbose: verbosity of the training process
     :return NeuralNetwork model
     """
     # [ab,cd] --> ['<s>','a','b','</s>','<s>','c','d','</s>']
@@ -112,7 +111,7 @@ def build_train_model(ctx: MainContext, verbose: int = 1):
 
     model.fit(input_matrix, output_matrix,
               epochs=ctx.epochs, batch_size=batches, callbacks=callbacks,
-              validation_split=0.1, verbose=verbose)
+              validation_split=0.1, verbose=ctx.verbose)
 
     return model
 
@@ -125,7 +124,7 @@ def do_train_and_predict(ctx: MainContext):
     ctx.training = mio.read_goldstd(ctx.training, ctx)
     ctx.test = mio.read_file(ctx.test)
 
-    model = build_train_model(ctx, 0)
+    model = build_train_model(ctx)
     predictions = predict_words(model, ctx)
     mio.output_predictions(predictions, ctx)
 
@@ -156,7 +155,7 @@ def do_benchmark(ctx: MainContext):
                                 ctx.optimize = optimizer
                                 ctx.loss = loss
 
-                                model = build_train_model(ctx, verbose=0)
+                                model = build_train_model(ctx)
                                 predictions = predict_words(model, ctx)
 
                                 eval_context = EvaluationContext()
@@ -187,7 +186,8 @@ def main():
         _optimize=option.optimize,
         _devel=option.devel,
         _training=option.training,
-        _test=option.words
+        _test=option.words,
+        _verb=option.verbose
     )
     if option.bmes:
         context.set_bmes_context()

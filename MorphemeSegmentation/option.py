@@ -31,6 +31,10 @@ class MainOption:
                             action='store_true',
                             help='Flag for the type of classification to use (by default: BM)')
 
+        parser.add_argument('-v',
+                            action='store_true',
+                            help='Verbose logging')
+
         parser.add_argument('-d', '--devel',
                             type=str,
                             help='Path to development file (contains segmentation to be used for evaluation)')
@@ -96,6 +100,11 @@ class MainOption:
         self.loss = args.loss
         self.init = args.init
         self.earlystop = args.earlystop
+
+        if args.verbose:
+            self.verbose = 1
+        else:
+            self.verbose = 0
 
 
 class EvaluateOption:

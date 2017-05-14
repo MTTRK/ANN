@@ -111,7 +111,7 @@ class MainContext(SegmentationContext):
     """
     def __init__(self, _windowsize: int, _windowtype: int, _hiddenlayer: int, _epochs: int,
                   _activate: str, _optimize: str, _loss: str, _init: str, _earlystop: int,
-                  _training: str, _test: str, _devel: str = None,
+                  _training: str, _test: str, _verb: int, _devel: str = None,
                  ):
         """
         :param _windowsize: size of window
@@ -125,6 +125,7 @@ class MainContext(SegmentationContext):
         :param _earlystop: value for early-stopping
         :param _training: training data for segmentation learning
         :param _test: file containing the words to be segmented
+        :param _verb: level of verbosity for logging
         :param _devel: file to be used for benchmark evaluation
         """
         super().__init__()
@@ -141,6 +142,7 @@ class MainContext(SegmentationContext):
         self.loss = _loss
         self.init = _init
         self.earlystop = _earlystop
+        self.verbose = _verb
 
     def __str__(self):
         return '[Window size: ' + str(self.windowsize) + '; ' + \

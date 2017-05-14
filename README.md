@@ -14,7 +14,7 @@ Here we are going to concern ourselves with the following languages: english, hu
 ```
 $ python3.5 morphsegm.py 
 Using TensorFlow backend.
-usage: morphsegm.py [-h] -t TRAINING -w WORDS [-b] [-bmes] [-d DEVEL]
+usage: morphsegm.py [-h] -t TRAINING -w WORDS [-b] [-bmes] [-v] [-d DEVEL]
                     [-ws WINDOWSIZE] [-wt WINDOWTYPE] [-hl HIDDENLAYER]
                     [-ep EPOCHS] [-ac ACTIVATE] [-op OPTIMIZE] [-lo LOSS]
                     [-it INIT] [-es EARLYSTOP]
